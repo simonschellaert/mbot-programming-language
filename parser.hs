@@ -66,6 +66,14 @@ int = do char '-'
          fmap negate nat
       <|> nat
 
+-- A parser that consumes a boolean (i.e. a string `true` or `false`)
+bool :: Parser Bool
+bool = do string "true"
+          return True
+       <|>
+       do string "false"
+          return False
+
 -- A parser that applies the three parsers `open`, `p` and `close` one after another. Only the
 -- results of `p` are kept and returned. This is useful to take care of brackets, hence the name.
 brackets :: Parser a -> Parser b -> Parser c -> Parser b
@@ -122,7 +130,8 @@ symbol xs = token (string xs)
 identifier :: Parser String
 identifier = token ident
 
-
+boolean :: Parser Bool
+boolean = token bool
 
 data AExpr = AConst Int
            | AVar String
@@ -145,8 +154,39 @@ aFactor = fmap AConst integer
           <|> fmap AVar identifier
           <|> brackets (symbol "(") aExpression (symbol ")")
 
+
+data BExpr = BConst Bool
+           | BVar String
+           | Not BExpr
+           | And BExpr BExpr
+           | Or  BExpr BExpr
+           | Less AExpr AExpr
+           | Gt   AExpr AExpr
+           | Eq   AExpr AExpr
+           deriving (Show)
+
+
+bExpression :: Parser BExpr
+bExpression = bTerm `chainl1` ops [(symbol "||", Or)]
+
+bTerm :: Parser BExpr
+bTerm = bFactor `chainl1` ops [(symbol "&&", And)]
+
+bFactor :: Parser BExpr
+bFactor = fmap BConst boolean
+          <|> fmap BVar identifier
+          <|> brackets (symbol "(") bExpression (symbol ")")
+          <|> (symbol "!" >> fmap Not bFactor)
+          <|> liftM2 Less aExpression (symbol "<"  >> aExpression)
+          <|> liftM2 Eq   aExpression (symbol "==" >> aExpression)
+          <|> liftM2 Gt   aExpression (symbol ">"  >> aExpression)
+
+
 main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, integers or variables"
           forever (do putStr ">>> "
                       inp <- getLine
                       let out = parse aExpression inp
-                      if null out then print "No parse" else print . fst . head $ out)
+                      print out)
+
+
+
