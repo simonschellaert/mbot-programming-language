@@ -66,6 +66,14 @@ int = do char '-'
          fmap negate nat
       <|> nat
 
+-- A parser that applies the three parsers `open`, `p` and `close` one after another. Only the
+-- results of `p` are kept and returned. This is useful to take care of brackets, hence the name.
+brackets :: Parser a -> Parser b -> Parser c -> Parser b
+brackets open p close = do open
+                           x <- p
+                           close
+                           return x
+
 -- A parser that consumes strings produced by grammar 'E -> E | E `op` p'
 chainl1 :: Parser a -> Parser (a -> a -> a) -> Parser a
 p `chainl1` op = do x <- p
@@ -135,7 +143,7 @@ aTerm = aFactor `chainl1` ops [(symbol "*", Mul), (symbol "/", Div)]
 aFactor :: Parser AExpr
 aFactor = fmap AConst integer
           <|> fmap AVar identifier
-
+          <|> brackets (symbol "(") aExpression (symbol ")")
 
 main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, integers or variables"
           forever (do putStr ">>> "
