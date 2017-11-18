@@ -7,12 +7,18 @@ $ runhaskell parser.hs
 ```
 
 
-## Backus-Naur Form
-### Arithmetic Expressions
+## BNF
+### Arithmetic Expression
 ```
-Exp    := Exp + Term | Exp - Term | Term
-Term   := Term * Factor | Term / Factor | Factor
-Factor := (Exp) | Const | Variable
+AExp    := AExp + ATerm | AExp - ATerm | ATerm
+ATerm   := ATerm * AFactor | ATerm / AFactor | AFactmor
+AFactor := (AExp) | Const | Variable
 ```
 
-
+### Boolean Expression
+```
+BExp    := BExp || BExp | BTerm
+BTerm   := BTerm && BTerm | BFactor
+BFactor := (BExp) | ! BFactor | Const | Variable | BRel
+BRel    := AExp < AExp | AExp == AExp | AExp > AExp
+```
