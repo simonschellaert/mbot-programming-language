@@ -1,25 +1,30 @@
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Identity
 import Data.Char
 import Text.Read
 
--- Create the Parser monad
+-- Create the Parser monad we all know and love
 newtype Parser a = Parser { parse :: String -> [(a, String)] }
 
 instance Functor Parser where
-    fmap f p = Parser $ map (\(x,xs) -> (f x, xs)) . parse p
+    fmap = liftM
 
 instance Applicative Parser where
-    pure x   = Parser $ \inp -> [(x, inp)]
-    f <*> g  = Parser $ \inp -> concat [parse (fmap f' g) inp' | (f', inp') <- parse f inp]
-
-instance Alternative Parser where
-    empty    = Parser $ const []
-    f <|> g  = Parser $ \inp -> parse f inp ++ parse g inp
+    pure  = return
+    (<*>) = ap
 
 instance Monad Parser where
     return x = Parser $ \inp -> [(x, inp)]
     x >>= f  = Parser $ \inp -> concat [parse (f x') inp' | (x', inp') <- parse x inp]
+
+instance Alternative Parser where
+    empty = mzero
+    (<|>) = mplus
+
+instance MonadPlus Parser where
+    mzero       = Parser $ const []
+    f `mplus` g = Parser $ \inp -> parse f inp ++ parse g inp
 
 -- A parser that consumes a single character if the input is non-empty and fails otherwise
 item :: Parser Char
@@ -82,6 +87,12 @@ brackets open p close = do open
                            close
                            return x
 
+-- A parser that recognizes non-empty sequences of `p` where instances of `p` are separated by `sep`
+sepby1   :: Parser a -> Parser b -> Parser [a]
+p `sepby1` sep = do x <- p
+                    xs <- many (sep >> p)
+                    return (x:xs)
+
 -- A parser that consumes strings produced by grammar 'E -> E | E `op` p'
 chainl1 :: Parser a -> Parser (a -> a -> a) -> Parser a
 p `chainl1` op = do x <- p
@@ -135,19 +146,18 @@ boolean = token bool
 
 data AExpr = AConst Int
            | AVar String
-           | Neg AExpr
-           | Sum AExpr AExpr
-           | Sub AExpr AExpr
-           | Mul AExpr AExpr
-           | Div AExpr AExpr
+           | AExpr :+: AExpr
+           | AExpr :-: AExpr
+           | AExpr :*: AExpr
+           | AExpr :/: AExpr
            deriving (Show)
 
 -- A parser for arithmetic expressions
 aExpression :: Parser AExpr
-aExpression = aTerm `chainl1` ops [(symbol "+", Sum), (symbol "-", Sub)]
+aExpression = aTerm `chainl1` ops [(symbol "+", (:+:)), (symbol "-", (:-:))]
 
 aTerm :: Parser AExpr
-aTerm = aFactor `chainl1` ops [(symbol "*", Mul), (symbol "/", Div)]
+aTerm = aFactor `chainl1` ops [(symbol "*", (:*:)), (symbol "/", (:/:))]
 
 aFactor :: Parser AExpr
 aFactor = fmap AConst integer
@@ -156,37 +166,77 @@ aFactor = fmap AConst integer
 
 
 data BExpr = BConst Bool
-           | BVar String
            | Not BExpr
-           | And BExpr BExpr
-           | Or  BExpr BExpr
-           | Less AExpr AExpr
-           | Gt   AExpr AExpr
-           | Eq   AExpr AExpr
+           | BExpr :&: BExpr
+           | BExpr :|: BExpr
+           | AExpr :<: AExpr
+           | AExpr :=: AExpr
+           | AExpr :>: AExpr
            deriving (Show)
 
 
 bExpression :: Parser BExpr
-bExpression = bTerm `chainl1` ops [(symbol "||", Or)]
+bExpression = bTerm `chainl1` ops [(symbol "||", (:|:))]
 
 bTerm :: Parser BExpr
-bTerm = bFactor `chainl1` ops [(symbol "&&", And)]
+bTerm = bFactor `chainl1` ops [(symbol "&&", (:&:))]
 
 bFactor :: Parser BExpr
 bFactor = fmap BConst boolean
-          <|> fmap BVar identifier
           <|> brackets (symbol "(") bExpression (symbol ")")
-          <|> (symbol "!" >> fmap Not bFactor)
-          <|> liftM2 Less aExpression (symbol "<"  >> aExpression)
-          <|> liftM2 Eq   aExpression (symbol "==" >> aExpression)
-          <|> liftM2 Gt   aExpression (symbol ">"  >> aExpression)
+          <|> fmap   Not   (symbol "!" >> bFactor)
+          <|> liftM2 (:<:) aExpression (symbol "<"  >> aExpression)
+          <|> liftM2 (:=:) aExpression (symbol "==" >> aExpression)
+          <|> liftM2 (:>:) aExpression (symbol ">"  >> aExpression)
+
+data Stmt = Assign String AExpr
+          | Seq [Stmt]
+          | If BExpr Stmt
+          deriving (Show)
+
+statement :: Parser Stmt
+statement = fmap Seq (singleStatement `sepby1` (symbol ";"))
+
+singleStatement :: Parser Stmt
+singleStatement = assignStatement
+                <|> ifStatement
+
+assignStatement :: Parser Stmt
+assignStatement = liftM2 Assign identifier (symbol "=" >> aExpression)
+
+ifStatement :: Parser Stmt
+ifStatement = do symbol "if"
+                 cond <- bExpression
+                 symbol "{"
+                 body <- statement
+                 symbol "}"
+                 return (If cond body)
 
 
 main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, integers or variables"
           forever (do putStr ">>> "
                       inp <- getLine
                       let out = parse aExpression inp
-                      print out)
+                      print out
+                      unless (null out) (print . evalA . fst . head $ out))
 
 
+-- TODO: Use some fancy monad transformers to keep track of the environment and errors
+type Eval a = Identity a
 
+evalB :: BExpr -> Eval Bool
+evalB (BConst b)  = return b
+evalB (Not b)     = fmap not (evalB b)
+evalB (b1 :&: b2) = liftM2 (&&) (evalB b1) (evalB b2)
+evalB (b1 :|: b2) = liftM2 (||) (evalB b1) (evalB b2)
+evalB (a1 :<: a2) = liftM2 (<)  (evalA a1) (evalA a2)
+evalB (a1 :=: a2) = liftM2 (==) (evalA a1) (evalA a2)
+evalB (a1 :>: a2) = liftM2 (>)  (evalA a1) (evalA a2)
+
+evalA :: AExpr -> Eval Int
+evalA (AConst a)  = return a
+evalA (AVar a)    = return 0
+evalA (a1 :+: a2) = liftM2 (+) (evalA a1) (evalA a2)
+evalA (a1 :-: a2) = liftM2 (-) (evalA a1) (evalA a2)
+evalA (a1 :*: a2) = liftM2 (*) (evalA a1) (evalA a2)
+evalA (a1 :/: a2) = liftM2 div (evalA a1) (evalA a2)
