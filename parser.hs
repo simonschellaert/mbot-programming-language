@@ -1,8 +1,13 @@
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Identity
+import Control.Monad.Reader
+import Control.Monad.State
 import Data.Char
-import Text.Read
+import qualified Data.Map as Map
+import Data.Maybe
+import Data.Foldable
+import qualified Text.Read as Read
 
 -- Create the Parser monad we all know and love
 newtype Parser a = Parser { parse :: String -> [(a, String)] }
@@ -61,7 +66,7 @@ ident = do c <- lower
 -- A parser that consumes a natural number
 nat :: Parser Int
 nat = do cs <- many digit
-         case readMaybe cs :: Maybe Int of
+         case Read.readMaybe cs :: Maybe Int of
              Nothing -> empty
              Just x  -> return x
 
@@ -101,34 +106,30 @@ p `chainl1` op = do x <- p
                                     return (f, y))
                     return (foldl (\x (f,y) -> f x y) x fys)
 
+-- 
+first :: Parser a -> Parser a
+first p = Parser $ \inp -> case parse p inp of
+                             [] -> []
+                             (x:xs) -> [x]
+
 -- A parser that applies each given parser and returns its associated value if it succeeds
 ops :: [(Parser a, b)] -> Parser b
 ops xs = foldr1 (<|>) [p >> return op | (p,op) <- xs]
 
--- A parser that consumes whitespace
+-- A parser that consumes whitespace, but not newlines. Note that this parser can fail if there's no
+-- whitespace to consume.
 spaces :: Parser ()
-spaces = do some (sat isSpace)
-            return ()
+spaces = first . void $ some (sat isWhite)
+         where isWhite c = isSpace c && c /= '\n' 
 
--- A parser that consumes a single-line comment
-comment :: Parser ()
-comment = do string "//"
-             many (sat (/='\n'))
-             return ()
-
--- A parser that repeatedly consumes comments and whitespace
-junk :: Parser ()
-junk = do many (spaces <|> comment)
-          return ()
-
--- A parser that applies the given parser and then consumes any remaining junk
+-- A parser that applies the given parser and then tries to consume any remaining whitespace till the end of the line.
 token :: Parser a -> Parser a
-token p = do x <- p
-             junk
-             return x
+token p = first (do x <- p
+                    spaces <|> return ()
+                    return x)
 
--- Various parser that consuming any remaining whitespace or comments after consuming the specified
--- type of input. These parsers will prove the most useful for implementing higher-level parsers.
+-- Various parser that consuming any remaining whitespace till the end of the line after consuming the specified
+-- type of input. These parsers will prove very useful for implementing higher-level parsers.
 natural :: Parser Int
 natural = token nat
 
@@ -143,6 +144,15 @@ identifier = token ident
 
 boolean :: Parser Bool
 boolean = token bool
+
+newline :: Parser ()
+newline = void (token (char '\n'))
+
+indent :: Parser ()
+indent = newline >> symbol "{" >> newline
+
+dedent :: Parser ()
+dedent = newline >> symbol "}" >> return ()
 
 data AExpr = AConst Int
            | AVar String
@@ -192,14 +202,15 @@ bFactor = fmap BConst boolean
 data Stmt = Assign String AExpr
           | Seq [Stmt]
           | If BExpr Stmt
+          | While BExpr Stmt
+          | Skip
           deriving (Show)
 
+-- A parser for a sequence of statements separated by one or more empty lines
 statement :: Parser Stmt
-statement = fmap Seq (singleStatement `sepby1` (symbol ";"))
-
-singleStatement :: Parser Stmt
-singleStatement = assignStatement
-                <|> ifStatement
+statement = fmap Seq (singleStatement `sepby1` (char '\n'))
+            where singleStatement = do spaces <|> return ()
+                                       assignStatement <|> ifStatement <|> skipStatement
 
 assignStatement :: Parser Stmt
 assignStatement = liftM2 Assign identifier (symbol "=" >> aExpression)
@@ -207,22 +218,33 @@ assignStatement = liftM2 Assign identifier (symbol "=" >> aExpression)
 ifStatement :: Parser Stmt
 ifStatement = do symbol "if"
                  cond <- bExpression
-                 symbol "{"
+                 indent
                  body <- statement
-                 symbol "}"
+                 dedent
                  return (If cond body)
 
+-- A parser for comment statements. That is, it consumes '//' and then consumes all remaining
+-- characters until the end of the line.
+skipStatement :: Parser Stmt
+skipStatement = do symbol "//"
+                   first . many $ sat (/='\n')
+                   return Skip
 
-main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, integers or variables"
-          forever (do putStr ">>> "
-                      inp <- getLine
-                      let out = parse aExpression inp
-                      print out
-                      unless (null out) (print . evalA . fst . head $ out))
 
+main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, integers or variablesss"
+          inp <- readFile "demo.txt"
+          let inp' = preprocess inp
+          putStrLn inp'
+          let out = parse statement inp'
+          mapM_ print out
+          unless (null out) (print (head out))
+
+
+type Name = String
+type Env = Map.Map Name Int
 
 -- TODO: Use some fancy monad transformers to keep track of the environment and errors
-type Eval a = Identity a
+type Eval a = ReaderT Int (StateT Env IO) a
 
 evalB :: BExpr -> Eval Bool
 evalB (BConst b)  = return b
@@ -235,8 +257,30 @@ evalB (a1 :>: a2) = liftM2 (>)  (evalA a1) (evalA a2)
 
 evalA :: AExpr -> Eval Int
 evalA (AConst a)  = return a
-evalA (AVar a)    = return 0
+evalA (AVar a)    = gets (fromJust . (Map.lookup a))
 evalA (a1 :+: a2) = liftM2 (+) (evalA a1) (evalA a2)
 evalA (a1 :-: a2) = liftM2 (-) (evalA a1) (evalA a2)
 evalA (a1 :*: a2) = liftM2 (*) (evalA a1) (evalA a2)
 evalA (a1 :/: a2) = liftM2 div (evalA a1) (evalA a2)
+
+
+--          let inp' = unlines (evalState (preprocess (lines inp ++ [""])) [0])
+
+
+preprocess :: String -> String
+preprocess = unlines . (flip evalState [0]) . addMarkers . (++ [""]) . filter (not . all isSpace) . lines
+
+-- TODO: Empty lines should pop the stack
+addMarkers :: [String] -> State [Int] [String]
+addMarkers []     = return []
+addMarkers (l:ls) = do indents <- get
+                       let cur = length . takeWhile isSpace $ l
+                       l' <- case compare cur (head indents) of
+                               GT -> do modify (cur:)
+                                        return ("{\n" ++ l)
+                               LT -> do let indents' = dropWhile (>cur) indents
+                                        put indents'
+                                        let diff = length indents - length indents'
+                                        return ((concat (replicate diff "}\n")) ++ l)
+                               EQ -> return l
+                       liftM2 (:) (return l') (addMarkers ls)
