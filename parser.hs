@@ -78,10 +78,10 @@ int = do char '-'
 
 -- A parser that consumes a boolean (i.e. a string `true` or `false`)
 bool :: Parser Bool
-bool = do string "true"
+bool = do string trueSymbol
           return True
        <|>
-       do string "false"
+       do string falseSymbol
           return False
 
 -- A parser that applies the three parsers `open`, `p` and `close` one after another. Only the
@@ -203,30 +203,77 @@ data Stmt = Assign String AExpr
           | Seq [Stmt]
           | If BExpr Stmt
           | While BExpr Stmt
+          | Exec Command
           | Skip
           deriving (Show)
+
+data Direction = Left | Right | Up | Down deriving (Show)
+data Flank = LeftFlank | RightFlank deriving (Show)
+
+data Command = Drive Direction
+             | Print String
+             | Light Flank AExpr AExpr AExpr
+             deriving (Show)
+
+
 
 -- A parser for a sequence of statements separated by one or more empty lines
 statement :: Parser Stmt
 statement = fmap Seq (singleStatement `sepby1` (char '\n'))
             where singleStatement = do spaces <|> return ()
-                                       assignStatement <|> ifStatement <|> skipStatement
+                                       assignStatement <|> ifStatement <|> skipStatement <|> whileStatement <|> cmdStatement
 
 assignStatement :: Parser Stmt
-assignStatement = liftM2 Assign identifier (symbol "=" >> aExpression)
+assignStatement = liftM2 Assign identifier (symbol assignSymbol >> aExpression)
 
 ifStatement :: Parser Stmt
-ifStatement = do symbol "if"
+ifStatement = do symbol ifSymbol
                  cond <- bExpression
                  indent
                  body <- statement
                  dedent
                  return (If cond body)
 
+
+whileStatement :: Parser Stmt
+whileStatement = do symbol whileSymbol
+                    cond <- bExpression
+                    indent
+                    body <- statement
+                    dedent
+                    return (While cond body)
+
+
+
+
+cmdStatement :: Parser Stmt
+cmdStatement = driveCmdStatement <|> lightCmdStatement <|> printCmdStatement
+
+driveCmdStatement :: Parser Stmt
+driveCmdStatement = do symbol driveSymbol
+                       dir <- (symbol leftSymbol >> return Main.Left)
+                               <|> (symbol rightSymbol >> return Main.Right)
+                               <|> (symbol upSymbol    >> return Main.Up)
+                               <|> (symbol downSymbol  >> return Main.Down)
+                       return (Exec (Drive dir))
+
+
+lightCmdStatement = do symbol lightSymbol
+                       flank <- (symbol leftFlankSymbol >> return LeftFlank)
+                                 <|> (symbol rightFlankSymbol >> return RightFlank)
+                       cmd <- liftM3 (Light flank) aExpression aExpression aExpression
+                       return (Exec cmd)
+
+printCmdStatement :: Parser Stmt
+printCmdStatement = do symbol printSymbol
+                       txt <- first . many $ sat (/='\n')
+                       return (Exec (Print txt))
+
+
 -- A parser for comment statements. That is, it consumes '//' and then consumes all remaining
 -- characters until the end of the line.
 skipStatement :: Parser Stmt
-skipStatement = do symbol "//"
+skipStatement = do symbol commentSymbol
                    first . many $ sat (/='\n')
                    return Skip
 
@@ -236,15 +283,26 @@ main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, i
           let inp' = preprocess inp
           putStrLn inp'
           let out = parse statement inp'
-          mapM_ print out
-          unless (null out) (print (head out))
+          print out
+          unless (null out) (do let prog = fst (head out)
+                                runEval logDevice (eval prog)
+                                return ())
+          -- runEval logDevice (eval out)
+          --let out = eval (parse statement inp')
+          --mapM_ print out
+          --
 
 
 type Name = String
 type Env = Map.Map Name Int
 
 -- TODO: Use some fancy monad transformers to keep track of the environment and errors
-type Eval a = ReaderT Int (StateT Env IO) a
+type Eval a = ReaderT Device (StateT Env IO) a
+
+
+runEval :: Device -> Eval () -> IO ((), Env)
+runEval device ev  = runStateT (runReaderT ev device) Map.empty
+
 
 evalB :: BExpr -> Eval Bool
 evalB (BConst b)  = return b
@@ -264,8 +322,17 @@ evalA (a1 :*: a2) = liftM2 (*) (evalA a1) (evalA a2)
 evalA (a1 :/: a2) = liftM2 div (evalA a1) (evalA a2)
 
 
---          let inp' = unlines (evalState (preprocess (lines inp ++ [""])) [0])
-
+eval :: Stmt -> Eval ()
+eval (Assign n e) = do v <- evalA e
+                       modify (Map.insert n v)
+eval (Seq xs)     = forM_ xs eval
+eval (If e stmt)  = do dev <- ask
+                       cond <- evalB e
+                       when cond (eval stmt)
+eval (While e stmt) = do cond <- evalB e
+                         when cond ((eval stmt) >> (eval (While e stmt)))
+eval Skip         = return ()
+eval (Exec cmd) = liftIO (print cmd)
 
 preprocess :: String -> String
 preprocess = unlines . (flip evalState [0]) . addMarkers . (++ [""]) . filter (not . all isSpace) . lines
@@ -284,3 +351,43 @@ addMarkers (l:ls) = do indents <- get
                                         return ((concat (replicate diff "}\n")) ++ l)
                                EQ -> return l
                        liftM2 (:) (return l') (addMarkers ls)
+
+
+
+data Device = Device {
+    sleep :: Int -> IO (),
+    setRGB :: Int -> Int -> Int -> Int -> IO (),
+    setMotor :: Int -> Int -> IO ()
+}
+
+
+
+
+logDevice = Device {
+    sleep = const (putStrLn "Sleeping"),
+    setRGB = undefined,
+    setMotor = undefined
+}
+
+
+
+
+-- TODO: Maybe we should call the symbol constructor here already instead of in the statements themselves?
+commentSymbol    = "💭"
+whileSymbol      = "🔁"
+ifSymbol         = "❓"
+sleepSymbol      = "😴"
+upSymbol         = "⬆️"
+downSymbol       = "⬇️"
+leftSymbol       = "⬅️"
+rightSymbol      = "➡️"
+moveSymbol       = "💨"
+trueSymbol       = "👍"
+falseSymbol      = "👎"
+leftFlankSymbol  = "👈"
+rightFlankSymbol = "👉"
+assignSymbol     = "⏪"
+driveSymbol      = "💨"
+lightSymbol      = "🚨"
+printSymbol      = "🖋"
+
