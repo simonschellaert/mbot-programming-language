@@ -59,11 +59,12 @@ string (x:xs) = do char x
                    return (x:xs)
 
 -- A parser that consumes an identifier (i.e. an alphanumeric string starting with a lowercase letter)
-ident = do c <- lower
+ident = do c <- letter
            cs <- many alphanum
            return (c:cs)
 
 -- A parser that consumes a natural number
+-- TODO: Fix this ugly function
 nat :: Parser Int
 nat = do cs <- many digit
          case Read.readMaybe cs :: Maybe Int of
@@ -76,16 +77,9 @@ int = do char '-'
          fmap negate nat
       <|> nat
 
--- A parser that consumes a boolean (i.e. a string `true` or `false`)
-bool :: Parser Bool
-bool = do string trueSymbol
-          return True
-       <|>
-       do string falseSymbol
-          return False
-
 -- A parser that applies the three parsers `open`, `p` and `close` one after another. Only the
 -- results of `p` are kept and returned. This is useful to take care of brackets, hence the name.
+-- TODO: Only used for ( and ) so make less generic
 brackets :: Parser a -> Parser b -> Parser c -> Parser b
 brackets open p close = do open
                            x <- p
@@ -130,9 +124,6 @@ token p = first (do x <- p
 
 -- Various parser that consuming any remaining whitespace till the end of the line after consuming the specified
 -- type of input. These parsers will prove very useful for implementing higher-level parsers.
-natural :: Parser Int
-natural = token nat
-
 integer :: Parser Int
 integer = token int
 
@@ -143,16 +134,23 @@ identifier :: Parser String
 identifier = token ident
 
 boolean :: Parser Bool
-boolean = token bool
+boolean = (trueSymbol  >> return True)
+      <|> (falseSymbol >> return False)
 
 newline :: Parser ()
 newline = void (token (char '\n'))
 
 indent :: Parser ()
-indent = newline >> symbol "{" >> newline
+indent = newline >> indentSymbol >> newline
 
 dedent :: Parser ()
-dedent = newline >> symbol "}" >> return ()
+dedent = newline >> dedentSymbol >> return ()
+
+block :: Parser Stmt
+block = do indent
+           body <- statementSeq
+           dedent
+           return body
 
 data AExpr = AConst Int
            | AVar String
@@ -164,15 +162,15 @@ data AExpr = AConst Int
 
 -- A parser for arithmetic expressions
 aExpression :: Parser AExpr
-aExpression = aTerm `chainl1` ops [(symbol "+", (:+:)), (symbol "-", (:-:))]
+aExpression = aTerm `chainl1` ops [(addSymbol, (:+:)), (subtractSymbol, (:-:))]
 
 aTerm :: Parser AExpr
-aTerm = aFactor `chainl1` ops [(symbol "*", (:*:)), (symbol "/", (:/:))]
+aTerm = aFactor `chainl1` ops [(multiplySymbol, (:*:)), (divideSymbol, (:/:))]
 
 aFactor :: Parser AExpr
 aFactor = fmap AConst integer
           <|> fmap AVar identifier
-          <|> brackets (symbol "(") aExpression (symbol ")")
+          <|> brackets openParSymbol aExpression closeParSymbol
 
 
 data BExpr = BConst Bool
@@ -186,94 +184,116 @@ data BExpr = BConst Bool
 
 
 bExpression :: Parser BExpr
-bExpression = bTerm `chainl1` ops [(symbol "||", (:|:))]
+bExpression = bTerm `chainl1` ops [(orSymbol, (:|:))]
 
 bTerm :: Parser BExpr
-bTerm = bFactor `chainl1` ops [(symbol "&&", (:&:))]
+bTerm = bFactor `chainl1` ops [(andSymbol, (:&:))]
 
 bFactor :: Parser BExpr
 bFactor = fmap BConst boolean
-          <|> brackets (symbol "(") bExpression (symbol ")")
-          <|> fmap   Not   (symbol "!" >> bFactor)
-          <|> liftM2 (:<:) aExpression (symbol "<"  >> aExpression)
-          <|> liftM2 (:=:) aExpression (symbol "==" >> aExpression)
-          <|> liftM2 (:>:) aExpression (symbol ">"  >> aExpression)
+          <|> brackets openParSymbol bExpression closeParSymbol
+          <|> fmap   Not   (negateSymbol >> bFactor)
+          <|> liftM2 (:<:) aExpression (ltSymbol  >> aExpression)
+          <|> liftM2 (:=:) aExpression (eqSymbol  >> aExpression)
+          <|> liftM2 (:>:) aExpression (gtSymbol  >> aExpression)
 
 data Stmt = Assign String AExpr
           | Seq [Stmt]
-          | If BExpr Stmt
+          | If [(BExpr, Stmt)]
           | While BExpr Stmt
           | Exec Command
           | Skip
           deriving (Show)
 
+
 data Direction = Left | Right | Up | Down deriving (Show)
 data Flank = LeftFlank | RightFlank deriving (Show)
+data Duration = VeryShort | Short | Medium | Long | VeryLong | Exact AExpr deriving (Show)
 
 data Command = Drive Direction
+             | Sleep Duration
              | Print String
              | Light Flank AExpr AExpr AExpr
              deriving (Show)
 
 
 
--- A parser for a sequence of statements separated by one or more empty lines
-statement :: Parser Stmt
-statement = fmap Seq (singleStatement `sepby1` (char '\n'))
-            where singleStatement = do spaces <|> return ()
-                                       assignStatement <|> ifStatement <|> skipStatement <|> whileStatement <|> cmdStatement
+-- A parser for a sequence of statements. A sequence of statements consists of one or more statements separated by a
+-- newline character.
+statementSeq :: Parser Stmt
+statementSeq = fmap Seq (singleStatement `sepby1` (char '\n'))
+
+-- A parser for a single statement. Note that this parser consumes any leading whitespace before attempting to parse
+-- the actual statement.
+singleStatement :: Parser Stmt
+singleStatement = do spaces <|> return ()
+                     assignStatement <|> ifStatement <|> skipStatement <|> whileStatement <|> cmdStatement
 
 assignStatement :: Parser Stmt
-assignStatement = liftM2 Assign identifier (symbol assignSymbol >> aExpression)
+assignStatement = liftM2 Assign identifier (assignSymbol >> aExpression)
 
 ifStatement :: Parser Stmt
-ifStatement = do symbol ifSymbol
+ifStatement = do ifSymbol
                  cond <- bExpression
-                 indent
-                 body <- statement
-                 dedent
-                 return (If cond body)
+                 body <- block
+                 elifClauses <- first (many elifClause)
+                 elseClause  <- (newline >> elseSymbol >> block) <|> (return Skip)
+                 return . If $ [(cond, body)] ++ elifClauses ++ [(BConst True, elseClause)]
 
+              where elifClause :: Parser (BExpr, Stmt)
+                    elifClause = do newline
+                                    elifSymbol
+                                    cond <- bExpression
+                                    body <- block
+                                    return (cond, body)
 
 whileStatement :: Parser Stmt
-whileStatement = do symbol whileSymbol
+whileStatement = do whileSymbol
                     cond <- bExpression
-                    indent
-                    body <- statement
-                    dedent
+                    body <- block
                     return (While cond body)
 
 
 
 
 cmdStatement :: Parser Stmt
-cmdStatement = driveCmdStatement <|> lightCmdStatement <|> printCmdStatement
+cmdStatement = driveCmdStatement <|> sleepCmdStatement <|> lightCmdStatement <|> printCmdStatement
 
 driveCmdStatement :: Parser Stmt
-driveCmdStatement = do symbol driveSymbol
-                       dir <- (symbol leftSymbol >> return Main.Left)
-                               <|> (symbol rightSymbol >> return Main.Right)
-                               <|> (symbol upSymbol    >> return Main.Up)
-                               <|> (symbol downSymbol  >> return Main.Down)
-                       return (Exec (Drive dir))
+driveCmdStatement = do driveSymbol
+                       dir <- (leftSymbol  >> return Main.Left)
+                          <|> (rightSymbol >> return Main.Right)
+                          <|> (upSymbol    >> return Main.Up)
+                          <|> (downSymbol  >> return Main.Down)
+                       return . Exec . Drive $ dir
 
+sleepCmdStatement :: Parser Stmt
+sleepCmdStatement = do sleepSymbol
+                       duration <- (veryShortSymbol >> return VeryShort)
+                               <|> (shortSymbol     >> return Short)
+                               <|> (mediumSymbol    >> return Medium)
+                               <|> (longSymbol      >> return Long)
+                               <|> (veryLongSymbol  >> return VeryLong)
+                               <|> (fmap Exact aExpression)
+                       return . Exec . Sleep $ duration
 
-lightCmdStatement = do symbol lightSymbol
-                       flank <- (symbol leftFlankSymbol >> return LeftFlank)
-                                 <|> (symbol rightFlankSymbol >> return RightFlank)
+lightCmdStatement :: Parser Stmt
+lightCmdStatement = do lightSymbol
+                       flank <- (leftFlankSymbol  >> return LeftFlank)
+                            <|> (rightFlankSymbol >> return RightFlank)
                        cmd <- liftM3 (Light flank) aExpression aExpression aExpression
-                       return (Exec cmd)
+                       return . Exec $ cmd
 
 printCmdStatement :: Parser Stmt
-printCmdStatement = do symbol printSymbol
-                       txt <- first . many $ sat (/='\n')
-                       return (Exec (Print txt))
+printCmdStatement = do printSymbol
+                       text <- first . many $ sat (/='\n')
+                       return . Exec . Print $ text
 
 
 -- A parser for comment statements. That is, it consumes '//' and then consumes all remaining
 -- characters until the end of the line.
 skipStatement :: Parser Stmt
-skipStatement = do symbol commentSymbol
+skipStatement = do skipSymbol
                    first . many $ sat (/='\n')
                    return Skip
 
@@ -282,7 +302,7 @@ main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, i
           inp <- readFile "demo.txt"
           let inp' = preprocess inp
           putStrLn inp'
-          let out = parse statement inp'
+          let out = parse statementSeq inp'
           print out
           unless (null out) (do let prog = fst (head out)
                                 runEval logDevice (eval prog)
@@ -326,9 +346,13 @@ eval :: Stmt -> Eval ()
 eval (Assign n e) = do v <- evalA e
                        modify (Map.insert n v)
 eval (Seq xs)     = forM_ xs eval
-eval (If e stmt)  = do dev <- ask
-                       cond <- evalB e
-                       when cond (eval stmt)
+eval (If xs)  = forM_ xs attemptBranch
+                where attemptBranch (cond, body) = do isTrue <- evalB cond
+                                                      when isTrue (eval body)
+
+
+
+
 eval (While e stmt) = do cond <- evalB e
                          when cond ((eval stmt) >> (eval (While e stmt)))
 eval Skip         = return ()
@@ -372,22 +396,50 @@ logDevice = Device {
 
 
 
--- TODO: Maybe we should call the symbol constructor here already instead of in the statements themselves?
-commentSymbol    = "💭"
-whileSymbol      = "🔁"
-ifSymbol         = "❓"
-sleepSymbol      = "😴"
-upSymbol         = "⬆️"
-downSymbol       = "⬇️"
-leftSymbol       = "⬅️"
-rightSymbol      = "➡️"
-moveSymbol       = "💨"
-trueSymbol       = "👍"
-falseSymbol      = "👎"
-leftFlankSymbol  = "👈"
-rightFlankSymbol = "👉"
-assignSymbol     = "⏪"
-driveSymbol      = "💨"
-lightSymbol      = "🚨"
-printSymbol      = "🖋"
+skipSymbol       = symbol "💭"
+whileSymbol      = symbol "🔁"
+ifSymbol         = symbol "❓"
+elifSymbol       = symbol "⁉️"
+elseSymbol       = symbol "❗️"
+sleepSymbol      = symbol "😴"
+veryShortSymbol  = symbol "🕑"
+shortSymbol      = symbol "🕔"
+mediumSymbol     = symbol "🕧"
+longSymbol       = symbol "🕖"
+veryLongSymbol   = symbol "🕙"
+upSymbol         = symbol "⬆️"
+downSymbol       = symbol "⬇️"
+leftSymbol       = symbol "⬅️"
+rightSymbol      = symbol "➡️"
+driveSymbol      = symbol "💨"
+trueSymbol       = symbol "👍"
+falseSymbol      = symbol "👎"
+leftFlankSymbol  = symbol "👈"
+rightFlankSymbol = symbol "👉"
+assignSymbol     = symbol "⏪"
+lightSymbol      = symbol "🚨"
+printSymbol      = symbol "🖋"
+zeroSymbol       = symbol "🌑"
+oneSymbol        = symbol "🌓"
+twoSymbol        = symbol "🌗"
+threeSymbol      = symbol "🌕"
+ltSymbol         = symbol "<"
+eqSymbol         = symbol "=="
+gtSymbol         = symbol ">"
+addSymbol        = symbol "+"
+subtractSymbol   = symbol "-"
+multiplySymbol   = symbol "*"
+divideSymbol     = symbol "/"
+andSymbol        = symbol "&&"
+orSymbol         = symbol "||"
+negateSymbol     = symbol "!"
+indentSymbol     = symbol "{"
+dedentSymbol     = symbol "}"
+openParSymbol    = symbol "("
+closeParSymbol   = symbol ")"
 
+
+
+-- TODO: The semantics of our else-if are wrong, only the first block with a true condition should be executed, not all of them
+-- TODO: Implement music statement
+-- TODO: Rename statemetn to statmentSeq
