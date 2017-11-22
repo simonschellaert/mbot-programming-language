@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Project Functioneel Programmeren</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.ebnf').html((i, old) => old.replace(/\|/g, '｜'))
+             .html((_, old) => old.replace(/bar/g, '|'))
+             .html(function (i, oldHtml) {
+        return oldHtml.replace(/_([a-zA-Z0-9]*)_/g, (a, name) => "<span class='exp'>" + name + "</span>");
+             }).html((_, old) => old.replace(/\*(\S*)\*/g, (a, name) => "<span class='spacing'>" + name + "</span>"))
+               .html((_, old) => old.replace(/(?!~)(\[|\]|{|}|｜|\(|\))(?!~)/g, (_, name) => "<span class='ebnf-syntax'>" + name + "</span>"))
+               .html((_, old) => old.replace(/~(\S*)~/g, (_, id) => id));
+
+    console.log(' ｜Ready')
+});
+</script>
+
+
+<style>
+@page  
+{ 
+    size: auto;   /* auto is the initial value */ 
+
+    /* this affects the margin in the printer settings */ 
+    margin: 25mm 25mm 25mm 25mm;  
+} 
+
+
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    margin: 0px;
+    font-size: 21px;
+}
+
+.ebnf {
+    font-family: "Monaco", monospace;
+    font-size: 18px;
+    line-height: 40px;
+}
+.exp {
+    border: 2px solid #ccc;
+    border-radius: 7px;
+    background-color: #f8f8f8;
+    padding: 0 5px;
+}
+
+.spacing {
+    border: 2px solid #cbe0fe;
+    border-radius: 7px;
+    background-color: #cbe0fe;
+    padding: 0 5px;
+}
+
+.ebnf-syntax {
+    color: #888;
+}
+
+p {
+    line-height: 1.7;
+    text-align: justify;
+}
+
+
+h1 {
+    font-size: 1.8em;
+}
+
+h1 .emoji {
+    font-size: 0.75em;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>1. Introductie <span class="emoji">👋</span></h1>
+
+
+<h1>2. Syntax van de taal <span class="emoji">✒️</span></h1>
+<p>
+We maken gebruik van de <em>Extended Backus-Naur form</em> om de syntax van onze taal te beschrijven.
+Om dit overzichtelijk te houden, voegen we wat extra opmaak toe om duidelijk het onderscheid te maken tussen elementen in onze taal en elementen van EBNF.
+Zo worden niet-terminalen <span class="exp">omkaderd</span> en krijgen symbolen die witruimte aanduiden een <span class="spacing">blauwe achtergrond</span>.
+Syntaxelementen van EBNF worden vervolgens aangeduid met een <span class="ebnf-syntax">lichte kleur</span>.
+Alle terminalen die de gebruiker effectief intypt (bv. haakjes of 👍), zijn tenslotte een emoji of gewoon zwart.
+</p>
+
+<pre class="ebnf">
+_StmtSeq_    := _Stmt_ { *⏎* _Stmt_ }
+_Stmt_       := _Assignment_ | _While_ | _If_ | _Command_
+
+_Assignment_ := <em>Identifier</em> ⏪ _AExp_
+_While_      := 🔁 _BExp_ *⇥* _StmtSeq_ *⇤*
+_If_         := ❓ _BExp_ *⇥* _StmtSeq_ *⇤* { ⁉️ _BExp_ *⇥* _StmtSeq_ *⇤* } [ ❓ _BExp_ *⇥* _StmtSeq_ *⇤* ]
+
+_AExp_       := _ATerm_ { ( + | - ) _ATerm_ }
+_ATerm_      := _AFactor_ { ( * | / ) _AFactor_ }
+_AFactor_    := ~(~_AExp_~)~ | _Constant_ | _Sensor_ | <em>Identifier</em>
+_Constant_   := <em>Literal</em> | 🌑 | 🌓 | 🌗 | 🌕
+_Sensor_     := 📏 | 🔭
+
+_BExp_       := _BTerm_ { barbar _BTerm_ }
+_BTerm_      := _BFactor_ { && _BFactor_ }
+_BFactor_    :=  👍  | 👎 | ! _BFactor_ | ~(~_BExp_~)~ |  _BRel_
+_BRel_       := _AExp_ < _AExp_ | _AExp_ == _AExp_ | _AExp_ > _AExp_
+
+_Command_    := 💨 _Direction_ | 😴 _Duration_ | 🚨 _Flank_ _AExp_ _AExp_ _AExp_ | 🎶 _Duration_ _AExp_
+_Direction_  := ⬇️ | ➡️ | ⬅️ | ⬆️
+_Duration_   := 🕑 | 🕔 | 🕖 | 🕙 | _AExp_
+_Flank_      := 👈 | 👉
+</pre>
+
+<p>
+In bovenstaande definities duidt <em>Identifier</em> de naam van een variabele aan.
+Variabelenamen beginnen steeds met een letter gevolgd door nul of meerdere alfanumerieke karakters.
+Een <em>Literal</em> is tenslotte een geheel getal in het decimale talstelsel.
+
+<pre style="font-size: 18px">
+TODO: Telescope with moons
+TODO: Else-if and else
+</pre>
+
+
+<h1>3. Semantiek van de taal <span class="emoji">📜</span></h1>
+
+<h1>4. Voorbeelden programma's <span class="emoji">📚</span></h1>
+<h2>Politiewagen</h2>
+
+<h2>Lijn volgen</h2>
+
+<h2>Obstakels ontwijken</h2>
+
+<h1>5. Implementatie <span class="emoji">👨‍💻</span></h1>
+<h2>Preprocessor</h2>
+<p>
+Doordat onze taal i.p.v. paren van haakjes gebruikt maakt van indentatie (de zgn. off-side rule) om blokken aan te duiden, is de taal niet langer context-vrij.
+Het parsen van een niet-contextvrije taal kan echter snel relatief ingewikkeld worden. Gelukkig bestaat er een elegant trukje, dat ook door o.a. parsers voor Python wordt gebruikt, om alsnog een contextvrije taal te bekomen.
+Het trukje bestaat eruit om onze taal eerst te laten verwerker door een preprocessor die telkens een <code>INDENT</code> token toevoegt als de indentatie vermeerdert en een <code>DEDENT</code> token als deze vermindert.
+Deze preprocessor houdt dan wel wat toestand bij, zijnde een stack van voorgaande indentatieniveaus, maar we bekomen vervolgens een nieuwe taal die wel contextvrij is.
+Deze nieuwe taal, met als enige verschil dat indentatie vervangen is door <code>INDENT</code>/<code>DEDENT</code> tokens, wordt vervolgens verwerkt door de parser, die geen rekening meer hoeft te houden met indentatie.
+
+
+
+</p>
+
+<h1>6. Conclusie <span class="emoji">🏁</span></h1>
+
+
+</body>
+
+</html>
