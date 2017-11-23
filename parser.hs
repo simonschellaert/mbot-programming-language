@@ -154,6 +154,7 @@ block = do indent
 
 data AExpr = AConst Int
            | AVar String
+           | ASensor Sensor
            | AExpr :+: AExpr
            | AExpr :-: AExpr
            | AExpr :*: AExpr
@@ -168,9 +169,22 @@ aTerm :: Parser AExpr
 aTerm = aFactor `chainl1` ops [(multiplySymbol, (:*:)), (divideSymbol, (:/:))]
 
 aFactor :: Parser AExpr
-aFactor = fmap AConst integer
-          <|> fmap AVar identifier
-          <|> brackets openParSymbol aExpression closeParSymbol
+aFactor = aConstant
+      <|> aSensor
+      <|> fmap AVar identifier
+      <|> brackets openParSymbol aExpression closeParSymbol
+
+aConstant :: Parser AExpr
+aConstant = fmap AConst (integer
+                    <|> (zeroSymbol  >> return 0)
+                    <|> (oneSymbol   >> return 1)
+                    <|> (twoSymbol   >> return 2)
+                    <|> (threeSymbol >> return 3))
+
+
+aSensor :: Parser AExpr
+aSensor = fmap ASensor ((lineSymbol     >> return Line)
+                    <|> (distanceSymbol >> return Distance))
 
 
 data BExpr = BConst Bool
@@ -206,6 +220,7 @@ data Stmt = Assign String AExpr
           deriving (Show)
 
 
+data Sensor = Line | Distance deriving (Show)
 data Direction = Left | Right | Up | Down deriving (Show)
 data Flank = LeftFlank | RightFlank deriving (Show)
 data Duration = VeryShort | Short | Medium | Long | VeryLong | Exact AExpr deriving (Show)
@@ -299,7 +314,7 @@ skipStatement = do skipSymbol
 
 
 main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, integers or variablesss"
-          inp <- readFile "demo.txt"
+          inp <- readFile "obstacles2.txt"
           let inp' = preprocess inp
           putStrLn inp'
           let out = parse statementSeq inp'
@@ -416,6 +431,8 @@ trueSymbol       = symbol "👍"
 falseSymbol      = symbol "👎"
 leftFlankSymbol  = symbol "👈"
 rightFlankSymbol = symbol "👉"
+distanceSymbol   = symbol "📏"
+lineSymbol       = symbol "🔭"
 assignSymbol     = symbol "⏪"
 lightSymbol      = symbol "🚨"
 printSymbol      = symbol "🖋"
