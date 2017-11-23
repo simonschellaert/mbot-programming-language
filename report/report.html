@@ -92,11 +92,12 @@ Alle terminalen die de gebruiker effectief intypt (bv. haakjes of 👍), zijn te
 
 <pre class="ebnf">
 _StmtSeq_    := _Stmt_ { *⏎* _Stmt_ }
-_Stmt_       := _Assignment_ | _While_ | _If_ | _Command_
+_Stmt_       := _Assignment_ | _While_ | _If_ | _Command_ | _Skip_
 
 _Assignment_ := <em>Identifier</em> ⏪ _AExp_
 _While_      := 🔁 _BExp_ *⇥* _StmtSeq_ *⇤*
-_If_         := ❓ _BExp_ *⇥* _StmtSeq_ *⇤* { ⁉️ _BExp_ *⇥* _StmtSeq_ *⇤* } [ ❓ _BExp_ *⇥* _StmtSeq_ *⇤* ]
+_If_         := ❓ _BExp_ *⇥* _StmtSeq_ *⇤* { *⏎* ⁉️ _BExp_ *⇥* _StmtSeq_ *⇤* } [ *⏎* ❗️ *⇥* _StmtSeq_ *⇤* ]
+_Skip_       := 💭 <em>Some text</em>
 
 _AExp_       := _ATerm_ { ( + | - ) _ATerm_ }
 _ATerm_      := _AFactor_ { ( * | / ) _AFactor_ }

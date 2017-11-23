@@ -1,45 +1,33 @@
-import Data.List
-import Data.Maybe
+module Main where
 
-type X = Integer
-type Y = Integer
-type Coord = (X, Y)
-type Angle = Double
+import Control.Monad
+import Parser
+import Evaluator
+import qualified System.Posix.Unistd as Unistd
 
-type Line = (Coord, Coord)
+main = do putStrLn "Please type an arithmetic expression involving +, -, *, /, integers or variablesss"
+          inp <- readFile "demo.txt"
+          let inp' = preprocess inp
+          putStrLn inp'
+          let out = parse statementSeq inp'
+          print out
+          unless (null out) (do let prog = fst (head out)
+                                runEval logDevice (eval prog)
+                                return ())
 
-data World = World { wRobot   :: (Coord, Angle)
-                   , wWalls   :: [Coord]
-                   , wLines   :: [Line]
-                   } deriving (Eq, Ord, Show)
+prompt s = do
+    putStr s
+    line <- getLine
+    return (read line)
 
-emptyWorld = World { wRobot = ((0, 0), 0), wWalls = [], wLines = [] }
-
-addPiece :: Coord -> Char -> World -> World
-addPiece co ch w
-    | ch `elem` wallChars = w { wWalls = co:wWalls w }
-    | ch `elem` botChars  = w { wRobot = (co, angle) }
-    | otherwise           = w
-    where wallChars = ['X', '+', '|', '-']
-          botChars  = ['>', '^', '<', 'v']
-          angle     = (fromIntegral . fromJust $ elemIndex ch botChars) * pi/2
+logDevice = Device {
+    sleep        = \x -> putStrLn ("Sleeping for " ++ show x ++ " milliseconds") >> Unistd.usleep (x * 1000),
+    setRGB       = \l r g b -> putStrLn ("Setting light " ++ show l ++ " to " ++ show r ++ ", " ++ show g ++ ", " ++ show b),
+    setMotor     = \l r -> putStrLn ("Setting motor speed to " ++ show l ++ ", " ++ show r),
+    readDistance = prompt "Enter the measurement of the distance sensor ",
+    readLine     = prompt "Enter the measurement of the line sensor (0, 1, 2 or 3)"
+}
 
 
--- Adds the pieces specified in the ASCII input representation of the grid world to the world.
--- Note that this method expects only the representation of the grid itself and not the line segments underneath.
-addPieces :: World -> String -> World
-addPieces w txt = foldr (uncurry addPiece) w withCoords
-    where withCoords = [((x, y), c) | (y, line) <- zip [0..] (lines txt), (x, c) <- zip [0..] line]
 
--- Adds line segments to the world based on a sequence of line segments represented in the format "(x1, y1), (x2, y2)".
-addLines :: World -> [String] -> World
-addLines w [] = w
-addLines w (l:ls) = w { wLines = (x, y):wLines (addLines w ls) }
-    where [x, y] = map read (words l)
 
--- Creates a world based on the ASCII input representation of that world.
-makeWorld :: String -> World
-makeWorld txt = addLines (addPieces emptyWorld (unlines pcs)) lns
-    where (pcs, lns) = span (notElem '(') (lines txt)
-
-main = readFile "world1.txt" >>= (print . makeWorld)
