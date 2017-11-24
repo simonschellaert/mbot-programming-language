@@ -3,5 +3,5 @@
 
 ## Usage
 ```
-$ runhaskell parser.hs
+$ runhaskell Main.hs [filename]
 ```
