@@ -164,6 +164,8 @@ eval (Exec (Light flank r g b)) = do let light = if flank == LeftFlank then 1 el
 eval (Exec (Sound dur freq)) = do cmd <- asks playTone
                                   liftIO =<< liftM2 cmd (evalA freq) (evalDuration dur)
 
+eval (Exec (Print txt)) = liftIO. putStrLn $ txt
+
 -- TODO: Remove print command (both in evaluation and in Command type)
 -- TODO: Remove `deriving (Show)`
 -- TODO: Limit exports

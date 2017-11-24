@@ -1,0 +1,32 @@
+💭 Computes the sum (first input = 0) or product (first input = 1) of the numbers 1 to second input
+
+sum ⏪ 10 / 0
+
+
+
+
+op ⏪ 📏
+n ⏪ 📏
+indexvandel00p ⏪ 0
+indexvandel00p ⏪ 1
+indexvandel00p ⏪ 0
+indexvandel00p ⏪ 0
+
+sum ⏪ op
+
+
+
+
+🔁 indexvandel00p * 100 < n * 100 || indexvandel00p * 100 == n * 100
+   ❓ op == 0
+         sum ⏪ ((sum) + indexvandel00p)
+    ⁉️ op == 1
+        ❓ ! (n == indexvandel00p)
+            sum ⏪ ((sum) * (indexvandel00p + 1))
+   ❗️ 
+         sum ⏪ -1
+
+    indexvandel00p ⏪ indexvandel00p + 1
+
+🚨 👈 sum 0 0
+

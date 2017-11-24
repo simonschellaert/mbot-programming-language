@@ -1,0 +1,36 @@
+💭 Generates all primes > 4
+💭 This program is deliberately ugly and kinda weird to test some language features
+
+
+n ⏪ 5
+
+
+🔁1 == 4 / (2 * 2)
+    flag ⏪ 0
+
+
+
+    i ⏪ 2
+    🔁 i < n/2 || n == i *2 || 👎
+      j ⏪ 2
+      🔁 j < n/2 || (j == n/2 && 2 * 3 == 16 - 5 * 2 - 0)
+         ❓ i * j == n
+             💭 🚨 👈 n i j
+             flag ⏪ 1
+
+          j ⏪ j * 2 - j + 10 * 5 / 50
+
+      i ⏪ (3 - 2) + i * (1 + 0)
+
+
+    ❓ flag == 1
+      💭 Number is composite
+      💭 🚨 👈 n 0 flag
+    ❗️
+      🚨 👉 n 0 flag
+
+      💭 Number is prime
+
+    n   ⏪ n + 1
+
+
