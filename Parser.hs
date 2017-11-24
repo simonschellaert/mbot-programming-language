@@ -92,9 +92,9 @@ brackets open p close = do open
                            return x
 
 -- A parser that recognizes non-empty sequences of `p` where instances of `p` are separated by `sep`
-sepby1   :: Parser a -> Parser b -> Parser [a]
+sepby1 :: Parser a -> Parser b -> Parser [a]
 p `sepby1` sep = do x <- p
-                    xs <- many (sep >> p)
+                    xs <- first (many (sep >> p))
                     return (x:xs)
 
 -- A parser that consumes strings produced by grammar 'E -> E | E `op` p'
@@ -269,8 +269,8 @@ printCmdStatement = do printSymbol
                        return . Exec . Print $ text
 
 
--- A parser for comment statements. That is, it consumes '//' and then consumes all remaining
--- characters until the end of the line.
+-- A parser for skip statements. That is, it consumes the skip symbol and then consumes all remaining characters until
+-- the end of the line.
 skipStatement :: Parser Stmt
 skipStatement = do skipSymbol
                    first . many $ sat (/='\n')
@@ -278,23 +278,25 @@ skipStatement = do skipSymbol
 
 
 preprocess :: String -> String
-preprocess = unlines . (flip evalState [0]) . addMarkers . (++ [""]) . filter (not . all isSpace) . lines
+preprocess = unlines . (flip evalState [0]) . addIndents . (++ [""]) . filter (not . all isSpace) . lines
 
--- TODO: Empty lines should pop the stack
-addMarkers :: [String] -> State [Int] [String]
-addMarkers []     = return []
-addMarkers (l:ls) = do indents <- get
+-- Adds an indent symbol each time the indentation level increases and a dedent symbol each time it decreases in the
+-- given list of lines. This function utilizes the state monad to carry the stack of current indentation levels around.
+addIndents :: [String] -> State [Int] [String]
+addIndents []     = return []
+addIndents (l:ls) = do indents <- get
                        let cur = length . takeWhile isSpace $ l
                        l' <- case compare cur (head indents) of
-                               GT -> do modify (cur:)
-                                        return ("{\n" ++ l)
-                               LT -> do let indents' = dropWhile (>cur) indents
-                                        put indents'
-                                        let diff = length indents - length indents'
-                                        return ((concat (replicate diff "}\n")) ++ l)
-                               EQ -> return l
-                       liftM2 (:) (return l') (addMarkers ls)
+                               GT -> do modify (cur:)                                   -- Indent level increased,
+                                        return ("{\n" ++ l)                             -- so output an indent symbol
 
+                               LT -> do let indents' = dropWhile (>cur) indents         -- Indent level decreased, so
+                                        put indents'                                    -- pop all bigger indents from
+                                        let diff = length indents - length indents'     -- the stack and output just as
+                                        return ((concat . replicate diff $ "}\n") ++ l) -- much dedent symbols
+
+                               EQ -> return l                                           -- Indent level didn't change
+                       liftM2 (:) (return l') (addIndents ls)
 
 -- In order not to clutter our code with Emoji, we aggregate all the tokens used in our language here. Note that
 -- `symbol` is a function that maps a string to a parser that consumes that string and any remaining whitespace.
