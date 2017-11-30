@@ -1,4 +1,4 @@
-# Project Functional programming 16-17
+# Project Functional programming 17-18
 
 
 ## Usage
