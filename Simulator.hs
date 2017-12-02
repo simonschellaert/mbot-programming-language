@@ -1,45 +1,51 @@
-import Data.List
-import Data.Maybe
+import           Graphics.Gloss
+import qualified Graphics.Gloss.Interface.Pure.Game as G
+import           WorldParser
 
-type X = Integer
-type Y = Integer
-type Coord = (X, Y)
-type Angle = Double
+-- The size of one cell
+cell = 32.0
 
-type Line = (Coord, Coord)
-
-data World = World { wRobot   :: (Coord, Angle)
-                   , wWalls   :: [Coord]
-                   , wLines   :: [Line]
-                   } deriving (Eq, Ord, Show)
-
-emptyWorld = World { wRobot = ((0, 0), 0), wWalls = [], wLines = [] }
-
-addPiece :: Coord -> Char -> World -> World
-addPiece co ch w
-    | ch `elem` wallChars = w { wWalls = co:wWalls w }
-    | ch `elem` botChars  = w { wRobot = (co, angle) }
-    | otherwise           = w
-    where wallChars = ['X', '+', '|', '-']
-          botChars  = ['>', '^', '<', 'v']
-          angle     = (fromIntegral . fromJust $ elemIndex ch botChars) * pi/2
+render :: G.Picture -> World -> G.Picture
+render wp (World robot walls _) = G.pictures $
+                                     [renderPicAt (G.rotate angle $ robotPicture robot) position]
+                                     ++ map (renderPicAt wp) walls
+  where position = rPosition robot
+        angle = rAngle robot
+        size which = maximum $ map which walls
+        toPix which = (+ (cell / 2 - cell * size which / 2))
+                      . (* cell)
+        renderPicAt picture (x, y) = G.translate (toPix fst x)
+                                                 (toPix snd y * (-1.0))
+                                                 picture
 
 
--- Adds the pieces specified in the ASCII input representation of the grid world to the world.
--- Note that this method expects only the representation of the grid itself and not the line segments underneath.
-addPieces :: World -> String -> World
-addPieces w txt = foldr (uncurry addPiece) w withCoords
-    where withCoords = [((x, y), c) | (y, line) <- zip [0..] (lines txt), (x, c) <- zip [0..] line]
+robotPicture :: Robot -> G.Picture
+robotPicture robot = G.pictures
+  [ G.color G.blue $ G.rectangleSolid cell cell               -- base
+  , G.color cLeft $ G.Translate 3 6 $ G.circleSolid 3         -- right led
+  , G.color cRight $ G.Translate 3 (-6) $ G.circleSolid 3     -- left led
+  , G.translate 0 (cell / 2) $ G.rectangleSolid (cell / 2) 4  -- right wheel
+  , G.translate 0 (-cell / 2) $ G.rectangleSolid (cell / 2) 4 -- left wheel
+  ]
+  where makeColor (r,g,b) = G.makeColorI r g b 255
+        cLeft = makeColor $ rColorLeft robot
+        cRight = makeColor $ rColorRight robot
 
--- Adds line segments to the world based on a sequence of line segments represented in the format "(x1, y1), (x2, y2)".
-addLines :: World -> [String] -> World
-addLines w [] = w
-addLines w (l:ls) = w { wLines = (x, y):wLines (addLines w ls) }
-    where [x, y] = map read (words l)
 
--- Creates a world based on the ASCII input representation of that world.
-makeWorld :: String -> World
-makeWorld txt = addLines (addPieces emptyWorld (unlines pcs)) lns
-    where (pcs, lns) = span (notElem '(') (lines txt)
+handleEvent :: G.Event -> World -> World
+handleEvent _ world = world
 
-main = readFile "world1.txt" >>= (print . makeWorld)
+step :: Float -> World -> World
+step _ (World robot walls wLines) = World robot {rPosition = (x+0.1,y) } walls wLines
+  where (x, y) = rPosition robot
+
+main = do txt <- readFile "worlds/world1.txt"
+          let world = makeWorld txt
+          [wp]      <- mapM loadBMP ["images/wall.bmp"]
+          G.play (G.InWindow "MBot" (700,500) (0,0))            -- display
+                            G.white                             -- background
+                            10                                  -- fps
+                            world                               -- initial world
+                            (render wp)                         -- render world
+                            handleEvent                         -- handle input
+                            step                                -- step world in time
