@@ -17,7 +17,8 @@ data Robot = Robot { rSpeedLeft :: Integer
                    , rPosition :: Coord
                    , rAngle :: Angle
                    , rColorLeft :: Color
-                   , rColorRight :: Color} deriving (Eq, Ord, Show)
+                   , rColorRight :: Color
+                   } deriving (Eq, Ord, Show)
 
 data World = World { wRobot   :: Robot
                    , wWalls   :: [Coord]
