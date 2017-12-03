@@ -1,24 +1,20 @@
-import           Control.Concurrent               (MVar, forkIO, newEmptyMVar,
-                                                   putMVar, takeMVar,
-                                                   threadDelay, tryTakeMVar)
+import           Control.Concurrent               (MVar, forkIO, modifyMVar_,
+                                                   newMVar, putMVar, readMVar,
+                                                   swapMVar, takeMVar,
+                                                   threadDelay, tryTakeMVar,
+                                                   withMVar)
 import           Graphics.Gloss
 import qualified Graphics.Gloss.Interface.IO.Game as G
+import           System.Exit
 import           WorldParser
-
-data Side = SideLeft | SideRight
-
-data RobotCommand = SetMotor Side Int
-                  | SetRGB  Side Int Int Int
 
 -- The size of one cell
 cell = 32.0
 
-render :: G.Picture -> World -> IO G.Picture
-render wp (World robot walls _) = return (
-                                         G.pictures $
-                                         [renderPicAt (G.rotate angle $ robotPicture robot) position]
-                                         ++ map (renderPicAt wp) walls
-                                         )
+render :: G.Picture -> World -> G.Picture
+render wp (World robot walls _) = G.pictures $
+                                  [renderPicAt (G.rotate angle $ robotPicture robot) position]
+                                  ++ map (renderPicAt wp) walls
   where position = rPosition robot
         angle = rAngle robot
         size which = maximum $ map which walls
@@ -41,51 +37,74 @@ robotPicture robot = G.pictures
         cLeft = makeColor $ rColorLeft robot
         cRight = makeColor $ rColorRight robot
 
+step :: MVar World -> Float -> World -> IO World
+step m t _ = do world <- takeMVar m
+                putMVar m $ tick t world
+                return world
 
-handleEvent :: G.Event -> World -> IO World
-handleEvent _ = return
+tick :: Float -> World -> World
+tick t (World robot walls wLines) = World robot {rPosition = position', rAngle = angle' } walls wLines
+  where (position', angle') = nextPosition t robot
 
-step :: MVar RobotCommand -> Float -> World -> IO World
-step m _ world = do maybeCommand <- tryTakeMVar m
-                    case maybeCommand of
-                      Just command -> executeCommand command world
-                      Nothing      -> return world
 
-executeCommand :: RobotCommand -> World -> IO World
-executeCommand command world = return $ case command of
-                                         SetRGB SideLeft r g b  -> world { wRobot = robot { rColorLeft=(r, g, b)}}
-                                         SetRGB SideRight r g b -> world { wRobot = robot { rColorRight=(r, g, b)}}
-                                         _                      -> world
+nextPosition :: Float -> Robot -> (Coord, Angle)
+nextPosition t robot = ((x', y'), angle')
+  where (x, y) = rPosition robot
+        angle = rAngle robot
+        vl = fromIntegral $ rSpeedLeft robot
+        vr = fromIntegral $ rSpeedRight robot
+        wr = 0.03
+        wa = 0.15
+        deltaX = t * (wr / 2) * (vl + vr) * cos angle
+        deltaY = t * (wr / 2) * (vl + vr) * sin angle
+        deltaAngle = t * (wr / wa) * (vr - vl)
+        x' = x + deltaX
+        y' = y + deltaY
+        angle' = angle + deltaAngle -- TODO modulo 'n stuff
 
+runSimulator :: MVar World -> IO ()
+runSimulator m = do world <- readMVar m
+                    [wp] <- mapM loadBMP ["images/wall.bmp"]
+                    G.playIO (G.InWindow "MBot" (700,500) (0,0)) -- display
+                               G.white                           -- background
+                               60                                -- fps
+                               world                             -- initial world
+                               (return . render wp)              -- render world
+                               (const return)                    -- handle input
+                               (step m)                          -- step world in time
+
+
+newtype Simulator = Simulator (MVar World)
+
+openSimulator :: World -> IO Simulator
+openSimulator world = do
+  m <- newMVar world
+  let s = Simulator m
+  _ <- forkIO (runSimulator m)
+  return s
+
+sendCommand :: Simulator -> (World -> World) -> IO ()
+sendCommand (Simulator m ) command = do world <- takeMVar m
+                                        let world' = command world
+                                        putMVar m world'
+
+setRGB :: Int -> Int -> Int -> Int -> World -> World
+setRGB side  r g b world = case side of
+  1 -> world { wRobot = robot { rColorLeft=(r, g, b)}}
+  2 -> world { wRobot = robot { rColorRight=(r, g, b)}}
   where robot = wRobot world
 
-launchSimulator :: MVar RobotCommand -> IO ()
-launchSimulator m = do txt <- readFile "worlds/world1.txt"
-                       let world = makeWorld txt
-                       [wp] <- mapM loadBMP ["images/wall.bmp"]
-                       G.playIO (G.InWindow "MBot" (700,500) (0,0)) -- display
-                               G.white                             -- background
-                               10                                   -- fps
-                               world                               -- initial world
-                               (render wp)                         -- render world
-                               handleEvent                         -- handle input
-                               (step m)                            -- step world in time
+setMotor :: Int -> Int -> World -> World
+setMotor l r world = world { wRobot = robot {rSpeedLeft = l, rSpeedRight = r}}
+  where robot = wRobot world
 
-main = do m <- newEmptyMVar
-          _ <- forkIO (launchSimulator m)
-          putMVar m (SetRGB SideLeft 255 255 255)
+main = do txt <- readFile "worlds/world1.txt"
+          let world = makeWorld txt
+          s <- openSimulator world
+          sendCommand s $ setMotor (-255) 255
+          sendCommand s $ setRGB 1 255 255 255
           threadDelay 1000000
-          putMVar m (SetRGB SideRight 255 255 255)
+          sendCommand s $ setRGB 2 255 255 255
           threadDelay 1000000
-          putMVar m (SetRGB SideLeft 0 0 255)
-          threadDelay 1000000
-          putMVar m (SetRGB SideRight 0 0 255)
-          threadDelay 1000000
-          putMVar m (SetRGB SideLeft 0 255 0)
-          threadDelay 1000000
-          putMVar m (SetRGB SideRight 0 255 0)
-          threadDelay 1000000
-          putMVar m (SetRGB SideLeft 255 0 0)
-          threadDelay 1000000
-          putMVar m (SetRGB SideRight 255 0 0)
-          threadDelay 1000000
+          sendCommand s $ setRGB 1 0 0 0
+          threadDelay 10000000000

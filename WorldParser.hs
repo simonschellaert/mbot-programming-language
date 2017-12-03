@@ -1,7 +1,7 @@
 module WorldParser where
 
-import Data.List
-import Data.Maybe
+import           Data.List
+import           Data.Maybe
 
 type X = Float
 type Y = Float
@@ -12,17 +12,17 @@ type Angle = Float
 type Line = (Coord, Coord)
 type Color = (Int, Int, Int)
 
-data Robot = Robot { rSpeedLeft :: Integer
-                   , rSpeedRight :: Integer
-                   , rPosition :: Coord
-                   , rAngle :: Angle
-                   , rColorLeft :: Color
+data Robot = Robot { rSpeedLeft  :: Int
+                   , rSpeedRight :: Int
+                   , rPosition   :: Coord
+                   , rAngle      :: Angle
+                   , rColorLeft  :: Color
                    , rColorRight :: Color
                    } deriving (Eq, Ord, Show)
 
-data World = World { wRobot   :: Robot
-                   , wWalls   :: [Coord]
-                   , wLines   :: [Line]
+data World = World { wRobot :: Robot
+                   , wWalls :: [Coord]
+                   , wLines :: [Line]
                    } deriving (Eq, Ord, Show)
 
 emptyRobot = Robot 0 0 (0.0, 0.0) 0 (255, 0, 0) (0, 255, 0)
