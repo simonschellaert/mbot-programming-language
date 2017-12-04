@@ -20,7 +20,7 @@ main = do args <- getArgs
           --d <- MBot.openMBot
           let mDevice = logDevice -- or "botDevice d"
           unless (null out) (do let prog = fst (head out)
-                                runEval mDevice (eval prog)
+                                runStmt mDevice prog
                                 return ())
           --MBot.closeMBot d
 
