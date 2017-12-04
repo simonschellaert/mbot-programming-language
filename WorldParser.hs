@@ -34,8 +34,8 @@ addPiece co ch w
     | ch `elem` botChars  = w { wRobot = emptyRobot { rPosition = co, rAngle = angle } }
     | otherwise           = w
     where wallChars = ['X', '+', '|', '-']
-          botChars  = ['>', '^', '<', 'v']
-          angle     = (fromIntegral . fromJust $ elemIndex ch botChars) * 90
+          botChars  = ['>', 'v', '<', '^']
+          angle     = (fromIntegral . fromJust $ elemIndex ch botChars) * pi / 2
 
 
 -- Adds the pieces specified in the ASCII input representation of the grid world to the world.
