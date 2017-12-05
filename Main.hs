@@ -17,12 +17,12 @@ main = do args <- getArgs
           putStrLn inp'
           let out = parse statementSeq inp'
           print out
-          --d <- MBot.openMBot
-          let mDevice = logDevice -- or "botDevice d"
+          d <- MBot.openMBot
+          let mDevice = botDevice d
           unless (null out) (do let prog = fst (head out)
                                 runStmt mDevice prog
                                 return ())
-          --MBot.closeMBot d
+          MBot.closeMBot d
 
 readHandler :: String -> IOError -> IO a
 readHandler name _ = die ("Cannot open file: " ++ name)
@@ -56,7 +56,7 @@ botDevice d = Device {
 }
 
 lineToInt :: MBot.Line -> Int
-lineToInt MBot.BOTHB = 0
-lineToInt MBot.LEFTB = 1
-lineToInt MBot.RIGHTB = 2
-lineToInt MBot.BOTHW = 3
+lineToInt MBot.BOTHW = 0
+lineToInt MBot.RIGHTB = 1
+lineToInt MBot.LEFTB = 2
+lineToInt MBot.BOTHB = 3

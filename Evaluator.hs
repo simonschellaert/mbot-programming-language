@@ -155,8 +155,8 @@ eval (Exec (Sleep dur)) = do millis <- evalDuration dur
 -- direction and then send a command to the device with these speeds.
 eval (Exec (Drive dir)) = do let speed = fromJust . (`Data.List.lookup` directions) $ dir
                              asks setMotor >>= (liftIO . ($speed) . uncurry)
-                             where directions = [(Left, (0, 80)),  (Right, (80, 0)),
-                                                 (Up,   (80, 80)), (Down,  (-80, -80))]
+                             where directions = [(Left, (0, 70)),  (Right, (70, 0)),
+                                                 (Up,   (70, 70)), (Down,  (-70, -70))]
 
 -- Evaluates a statement calling the light command. We first inspect the flank to know which of the 2 light indices to
 -- send to the device, and then evaluate each of the three arithmetic expressions passed as arguments before sending a

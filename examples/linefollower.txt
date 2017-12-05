@@ -1,11 +1,22 @@
 💭 Let me follow the line
 
+prev ⏪ 🌑
+
 🔁👍
-   ❓ 🔭  == 🌑
-     💨 ⬆️
-   ⁉️  🔭  == 🌓
-     💨 ⬅️
-   ⁉️  🔭  == 🌗
-     💨 ➡️
-   ⁉️  🔭  == 🌕
-     💨 ➡️
+   new ⏪ 🔭
+
+   💭 Reuse the last line reading if there's no line in sight,
+   💭 or save this reading if the we know the direction of the line
+   ❓new == 🌕
+      new ⏪ prev
+   ⁉️ new  == 🌓 || new  == 🌗
+      prev ⏪ new
+
+   ❓ new  == 🌑
+      💨 ⬆️
+   ⁉️ new  == 🌓
+      💨 ⬅️
+   ⁉️ new  == 🌗
+      💨 ➡️
+
+
