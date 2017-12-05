@@ -111,11 +111,11 @@ evalA (a1 :/: a2)        = liftM2 div (evalA a1) (evalA a2)
 evalDuration :: Duration -> Eval Int
 evalDuration (Exact a) = evalA a
 evalDuration constant  = return $ case constant of
-                           VeryShort -> 100
-                           Short     -> 250
-                           Medium    -> 500
-                           Long      -> 1000
-                           VeryLong  -> 5000
+                           VeryShort -> 400
+                           Short     -> 800
+                           Medium    -> 1200
+                           Long      -> 1600
+                           VeryLong  -> 2000
 
 -- An evaluator for statements. Note that this evaluator doesn't return anything since the sole purpose of evaluating
 -- a statement is its side effects.
