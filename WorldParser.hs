@@ -52,7 +52,7 @@ addLines w (l:ls) = w { wLines = (x, y):wLines (addLines w ls) }
 
 -- Creates a world based on the ASCII input representation of that world.
 makeWorld :: String -> World
-makeWorld txt = (addPieces emptyWorld (unlines pcs))
+makeWorld txt = addLines (addPieces emptyWorld (unlines pcs)) lns
     where (pcs, lns) = span (notElem '(') (lines txt)
 
---main = readFile "worlds/world1.txt" >>= (print . makeWorld)
+main = readFile "worlds/world1.txt" >>= (print . makeWorld)
