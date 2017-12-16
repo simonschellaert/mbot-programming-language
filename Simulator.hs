@@ -4,7 +4,9 @@ import           Control.Concurrent               (MVar, forkIO, modifyMVar_,
                                                    threadDelay, tryTakeMVar,
                                                    withMVar)
 import           Data.Fixed
+import           Data.Maybe                       (mapMaybe)
 import           Graphics.Gloss
+import           Graphics.Gloss.Geometry.Line
 import qualified Graphics.Gloss.Interface.IO.Game as G
 import           WorldParser
 
@@ -57,32 +59,30 @@ nextPosition t robot = ((x', y'), angle')
         vr = fromIntegral $ rSpeedRight robot
         wr = 0.03
         wa = 0.11
-        deltaX = t * (wr / 2) * (vl + vr) * cos angle
-        deltaY = t * (wr / 2) * (vl + vr) * sin angle
-        deltaAngle = t * (wr / wa) * (vr - vl)
-        x' = x + deltaX
-        y' = y + deltaY
-        angle' = (angle + deltaAngle) `mod'` (2 * pi)
+        x' = x + t * (wr / 2) * (vl + vr) * cos angle
+        y' = y + t * (wr / 2) * (vl + vr) * sin angle
+        angle' = (angle + t * (wr / wa) * (vr - vl)) `mod'` (2 * pi)
 
 collides :: [Coord] -> Coord -> Angle -> Bool
 collides walls (x, y) angle = not $ null [corner | corner <- corners, wall <- walls, isInSquare wall corner]
-  where rotateAround (xo, yo) (x', y') = ( xo + (x' - xo) * cos angle - (y' - yo) * sin angle
-                                         , yo + (x' - xo) * sin angle + (y' - yo) * cos angle)
-        corners = map (rotateAround (x + 0.5, y + 0.5))
+  where corners = map (rotateAround (x + 0.5, y + 0.5) angle)
                       [ (x, y)
                       , (x + 0.5, y)
                       , (x + 1, y)
                       , (x, y + 0.5)
                       , (x, y + 1)
                       , (x + 0.5, y + 1)
-                      , (x + 1, y + 0.5)
-                      , (x + 1, y + 1)]
+                      , (x + 1.0, y + 0.5)
+                      , (x + 1.0, y + 1.0)]
         isInSquare (xSquare, ySquare) (x', y') =  x' > xSquare
                                                && x' < xSquare + 1.0
                                                && y' > ySquare
                                                && y' < ySquare + 1.0
 
 
+rotateAround :: Coord -> Angle -> Coord -> Coord
+rotateAround (xo, yo) angle (x, y) = ( xo + (x - xo) * cos angle - (y - yo) * sin angle
+                                     , yo + (x - xo) * sin angle + (y - yo) * cos angle)
 runSimulator :: MVar World -> IO ()
 runSimulator m = do world <- readMVar m
                     [wp] <- mapM loadBMP ["images/wall.bmp"]
@@ -110,7 +110,7 @@ sendCommand (Simulator m ) command = do world <- takeMVar m
                                         putMVar m world'
 
 setRGB :: Int -> Int -> Int -> Int -> World -> World
-setRGB side  r g b world = case side of
+setRGB side r g b world = case side of
   1 -> world { wRobot = robot { rColorLeft=(r, g, b)}}
   2 -> world { wRobot = robot { rColorRight=(r, g, b)}}
   where robot = wRobot world
@@ -118,6 +118,25 @@ setRGB side  r g b world = case side of
 setMotor :: Int -> Int -> World -> World
 setMotor l r world = world { wRobot = robot {rSpeedLeft = l, rSpeedRight = r}}
   where robot = wRobot world
+
+readUltraSonic :: Simulator -> IO Float
+readUltraSonic (Simulator m) = do world <- readMVar m
+                                  return $ getDistance world
+
+getDistance :: World -> Float
+getDistance world@(World robot walls _) = minimum $ map distance intersections
+  where position@(x, y) = rPosition robot
+        angle = rAngle robot
+        origin@(xo, yo) = rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y + 0.5)
+        end = rotateAround (x + 0.5, y + 0.5) angle (x + 50, y + 0.5)
+        intersectionsWith (x', y') = mapMaybe (uncurry $ intersectSegSeg origin end)
+                                     [ ((x', y'), (x' + 1, y'))
+                                     , ((x' + 1, y'), (x' + 1, y' + 1))
+                                     , ((x' + 1, y' + 1), (x', y' + 1))
+                                     , ((x', y' + 1), (x', y'))
+                                     ]
+        distance (x', y') = sqrt ((x' - xo) ** 2 + (y' - yo) ** 2)
+        intersections = concatMap intersectionsWith walls
 
 main = do txt <- readFile "worlds/world1.txt"
           let world = makeWorld txt
@@ -131,4 +150,6 @@ main = do txt <- readFile "worlds/world1.txt"
           sendCommand s $ setRGB 2 255 0 0
           threadDelay 10000000
           sendCommand s $ setMotor 9 10
+          sendCommand s $ setRGB 1 0 255 0
+          sendCommand s $ setRGB 2 1 255 0
           threadDelay 1000000000
