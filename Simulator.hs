@@ -7,6 +7,8 @@ import           Data.Fixed
 import           Data.Maybe                       (mapMaybe)
 import           Graphics.Gloss
 import           Graphics.Gloss.Geometry.Line
+import           Graphics.Gloss.Data.Vector
+import           Graphics.Gloss.Geometry.Angle
 import qualified Graphics.Gloss.Interface.IO.Game as G
 import           WorldParser
 
@@ -14,8 +16,9 @@ import           WorldParser
 cell = 32.0
 
 render :: G.Picture -> World -> G.Picture
-render wp (World robot walls _) = G.pictures $
+render wp (World robot walls lns) = G.pictures $
                                   [renderPicAt (G.rotate angle $ robotPicture robot) position]
+                                  ++ map (\ln -> renderPicAt (linePicture ln) $ fst ln)  lns
                                   ++ map (renderPicAt wp) walls
   where position = rPosition robot
         angle = rAngle robot * 180 / pi
@@ -25,6 +28,31 @@ render wp (World robot walls _) = G.pictures $
         renderPicAt picture (x, y) = G.translate (toPix fst x)
                                                  (toPix snd y * (-1.0))
                                                  picture
+
+linePicture :: Line -> G.Picture
+linePicture ((x0, y0), (x1, y1)) = G.rotate angle
+                                   $ G.translate ((l - cell) / 2) 0
+                                   $ G.rectangleSolid l cell
+  where dx = x1 - x0
+        dy = y1 - y0
+        d = sqrt (dx ** 2 + dy ** 2) + 1
+        l = d * cell
+        angle = radToDeg $ argV (dx, dy)
+
+-- Alternative method for creating a line TODO delete this
+--linePicture :: Line -> G.Picture
+--linePicture ((x0, y0), (x1, y1)) = G.translate (- cell / 2) (cell / 2) $
+--                                               G.polygon points
+--  where dx = x1 - x0
+--        dy = y1 - y0
+--        d = sqrt (dx ** 2 + dy ** 2)
+--        l = d * cell
+--        angle = radToDeg $ argV (dx, dy)
+--        points
+--          | dx > dy =  [ (0.0, 0.0), (cell * dx, - cell * dy)
+--                          , (cell * dx, - cell * (dy + 1)), (0.0, - cell)]
+--          | otherwise =   [ (0.0, 0.0), (cell * dx, - cell * dy)
+--                          , (cell * (dx + 1), - cell * dy), (cell, 0.0)]
 
 robotPicture :: Robot -> G.Picture
 robotPicture robot = G.pictures
@@ -38,7 +66,6 @@ robotPicture robot = G.pictures
         cLeft = makeColor $ rColorLeft robot
         cRight = makeColor $ rColorRight robot
         robotSize = cell * 1.0
-
 
 step :: MVar World -> Float -> World -> IO World
 step m t _ = do world <- takeMVar m
@@ -83,6 +110,7 @@ collides walls (x, y) angle = not $ null [corner | corner <- corners, wall <- wa
 rotateAround :: Coord -> Angle -> Coord -> Coord
 rotateAround (xo, yo) angle (x, y) = ( xo + (x - xo) * cos angle - (y - yo) * sin angle
                                      , yo + (x - xo) * sin angle + (y - yo) * cos angle)
+
 runSimulator :: MVar World -> IO ()
 runSimulator m = do world <- readMVar m
                     [wp] <- mapM loadBMP ["images/wall.bmp"]
