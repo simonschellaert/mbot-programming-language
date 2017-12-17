@@ -2,6 +2,7 @@ module WorldParser where
 
 import           Data.List
 import           Data.Maybe
+import           Data.Tuple()
 
 type X = Float
 type Y = Float
@@ -50,9 +51,25 @@ addLines w [] = w
 addLines w (l:ls) = w { wLines = (x, y):wLines (addLines w ls) }
     where [x, y] = map read (words l)
 
+lineCoords :: Line -> [Coord]
+lineCoords line@((x0, y0), (x1, y1))
+  | x0 == x1  = [(x, y) | x <- [x0], y <- [y0..y1]]
+  | otherwise = midpoint line
+
+midpoint :: Line -> [Coord]
+midpoint ((x0, y0), (x1, y1)) = step listX y0 0.0 []
+  where listX = [x0, x0 + signum (x1 - x0)..x1]
+        deltaX = x1 - x0
+        deltaY = y1 - y0
+        deltaErr = abs (deltaY / deltaX)
+        step [] _ _ coords = coords
+        step (x:xs) y' err coords
+          | err >= 0.5 = step (x:xs) (y' + signum deltaY) (err - 1.0) coords
+          | otherwise  = step xs y' (err + deltaErr) ((x, y'):coords)
+
 -- Creates a world based on the ASCII input representation of that world.
 makeWorld :: String -> World
 makeWorld txt = addLines (addPieces emptyWorld (unlines pcs)) lns
     where (pcs, lns) = span (notElem '(') (lines txt)
 
-main = readFile "worlds/world1.txt" >>= (print . makeWorld)
+--main = readFile "worlds/world1.txt" >>= (print . makeWorld)
