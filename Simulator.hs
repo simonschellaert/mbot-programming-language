@@ -35,30 +35,15 @@ linePicture ((x0, y0), (x1, y1)) = G.rotate angle
                                    $ G.rectangleSolid l cell
   where dx = x1 - x0
         dy = y1 - y0
-        d = sqrt (dx ** 2 + dy ** 2) + 1
+        d = sqrt (dx ** 2 + dy ** 2)
         l = d * cell
         angle = radToDeg $ argV (dx, dy)
-
--- Alternative method for creating a line TODO delete this
---linePicture :: Line -> G.Picture
---linePicture ((x0, y0), (x1, y1)) = G.translate (- cell / 2) (cell / 2) $
---                                               G.polygon points
---  where dx = x1 - x0
---        dy = y1 - y0
---        d = sqrt (dx ** 2 + dy ** 2)
---        l = d * cell
---        angle = radToDeg $ argV (dx, dy)
---        points
---          | dx > dy =  [ (0.0, 0.0), (cell * dx, - cell * dy)
---                          , (cell * dx, - cell * (dy + 1)), (0.0, - cell)]
---          | otherwise =   [ (0.0, 0.0), (cell * dx, - cell * dy)
---                          , (cell * (dx + 1), - cell * dy), (cell, 0.0)]
 
 robotPicture :: Robot -> G.Picture
 robotPicture robot = G.pictures
   [ G.color G.blue $ G.rectangleSolid robotSize robotSize               -- base
-  , G.color cLeft $ G.Translate 3 6 $ G.circleSolid 3         -- right led
-  , G.color cRight $ G.Translate 3 (-6) $ G.circleSolid 3     -- left led
+  , G.color cLeft $ G.Translate 3 6 $ G.circleSolid 3                   -- right led
+  , G.color cRight $ G.Translate 3 (-6) $ G.circleSolid 3               -- left led
   , G.translate 0 (robotSize / 2) $ G.rectangleSolid (robotSize / 2) 4  -- right wheel
   , G.translate 0 (-robotSize / 2) $ G.rectangleSolid (robotSize / 2) 4 -- left wheel
   ]
@@ -166,12 +151,46 @@ getDistance world@(World robot walls _) = minimum $ map distance intersections
         distance (x', y') = sqrt ((x' - xo) ** 2 + (y' - yo) ** 2)
         intersections = concatMap intersectionsWith walls
 
+readLineFollower :: Simulator -> IO Int
+readLineFollower (Simulator m) = do world <- readMVar m
+                                    return $ getLineStatus world
+
+getLineStatus :: World ->  Int
+getLineStatus world@(World robot _ lns)
+  | isOnBlack left && isOnBlack right = 0
+  | isOnBlack right = 1
+  | isOnBlack left = 2
+  | otherwise = 3
+  where (x, y) = rPosition robot
+        angle = rAngle robot
+        left = rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y)
+        right =  rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y + 1.0)
+        closestPoint = uncurry closestPointOnLine
+        distance (x0, y0) (x1, y1) = sqrt ((x1 - x0) ** 2 + (y1 - y0) ** 2) -- TODO extract
+        isOnLine point ln = distance (closestPoint ln point) point <= 1 / 2
+        isWithinBounds (xa, ya) ((x0, y0), (x1, y1)) =  (x0 <= xa && xa <= x1)
+                                                     || (x1 <= xa && xa <= x0)
+                                                     || (y0 <= ya && ya <= y1)
+                                                     || (y1 <= ya && ya <= y0)
+        lns' = map adjustLine lns
+        isOnBlack point = any (\ln -> isWithinBounds point ln
+                                      && isOnLine point ln) lns'
+
+adjustLine :: Line -> Line
+adjustLine ((x0, y0), (x1, y1)) = ( (x0 + sin angle / 2, y0 + cos angle / 2)
+                                  , (x1 + sin angle / 2, y1 + cos angle / 2))
+  where angle = radToDeg $ argV (x1 - x0, y1 - y0)
+
+loop s = do l <- readLineFollower s
+            print l
+            loop s
+
 main = do txt <- readFile "worlds/world1.txt"
           let world = makeWorld txt
           s <- openSimulator world
-          sendCommand s $ setMotor 10 9
-          sendCommand s $ setRGB 1 0 255 0
-          sendCommand s $ setRGB 2 1 255 0
+          sendCommand s $ setMotor 10 11
+          sendCommand s $ setRGB 1 255 255 255
+          loop s
           threadDelay 10000000
           sendCommand s $ setMotor (-10) (-10)
           sendCommand s $ setRGB 1 255 0 0
