@@ -88,7 +88,7 @@ nextPosition t robot = robot {rPosition = (x', y'), rAngle = angle'}
         wa = 0.11
         x' = x + t * (wr / 2) * (vl + vr) * cos angle
         y' = y + t * (wr / 2) * (vl + vr) * sin angle
-        angle' = (angle + t * (wr / wa) * (vr - vl)) `mod'` (2 * pi)
+        angle' = (angle + t * (wr / wa) * (vl - vr)) `mod'` (2 * pi)
 
 -- Returns true when the position of the robot collides with one or more walls.
 collides :: [Coord] -- A list with the coordinates of the walls

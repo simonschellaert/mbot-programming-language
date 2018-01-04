@@ -46,7 +46,8 @@ setRGB side r g b world = case side of
 setMotor :: Int     -- Speed of the left wheel
          -> Int     -- Speed of the right wheel
          -> Command
-setMotor l r world = world { wRobot = robot {rSpeedLeft = l, rSpeedRight = r}}   where robot = wRobot world
+setMotor l r world = world { wRobot = robot {rSpeedLeft = l, rSpeedRight = r}}
+  where robot = wRobot world
 
 -- Returns the distance between the front of the robot and the nearest wall.
 readUltraSonic :: Simulator -> IO Float
@@ -72,18 +73,21 @@ getDistance world@(World robot walls _) = minimum $ map (distance (xo, yo)) inte
 
 -- Reads the line status of the robot.
 -- The possible return values are equal to:
--- 0 = both sensors detect a black line -- 1 = the right sensor detects a black line
+-- 0 = no sensor detects a black line
+-- 1 = the right sensor detects a black line
 -- 2 = the left sensor detects a black line
--- 3 = no sensor detects a black line
+-- 3 = both sensors detect a black line
 readLineFollower :: Simulator -> IO Int
 readLineFollower (Simulator m) = do world <- readMVar m
                                     return $ getLineStatus world
--- Calculates the line status getLineStatus :: World ->  Int
+
+-- Calculates the line status
+getLineStatus :: World ->  Int
 getLineStatus world@(World robot _ lns)
-  | isOnBlack left && isOnBlack right = 0
+  | isOnBlack left && isOnBlack right = 3
   | isOnBlack right = 1
   | isOnBlack left = 2
-  | otherwise = 3
+  | otherwise = 0
   where (x, y) = rPosition robot
         angle = rAngle robot
         left = rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y)
@@ -102,4 +106,4 @@ getLineStatus world@(World robot _ lns)
 adjustLine :: Line -> Line
 adjustLine ((x0, y0), (x1, y1)) = ( (x0 + sin angle / 2, y0 + cos angle / 2)
                                   , (x1 + sin angle / 2, y1 + cos angle / 2))
-  where angle = radToDeg $ argV (x1 - x0, y1 - y0)
+  where angle = argV (abs (x1 - x0), abs (y1 - y0))
