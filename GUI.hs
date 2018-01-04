@@ -1,5 +1,5 @@
 module GUI where
-  
+
 import           Control.Concurrent               (MVar, forkIO, newMVar,
                                                    putMVar, readMVar, takeMVar,
                                                    threadDelay)
@@ -21,9 +21,10 @@ render :: G.Picture -- Picture of a wall
        -> World     -- The world that should be rendered
        -> G.Picture -- Picture of the world
 render wp (World robot walls lns) = G.pictures $
-                                  [renderPicAt (G.rotate angle $ robotPicture robot) position]
-                                  ++ map (\ln -> renderPicAt (linePicture ln) $ fst ln)  lns
+                                     map (\ln -> renderPicAt (linePicture ln) $ fst ln)  lns
                                   ++ map (renderPicAt wp) walls
+                                  ++ [renderPicAt (G.rotate angle $ robotPicture robot) position]
+
   where position = rPosition robot
         angle = radToDeg $ rAngle robot
         size which = maximum $ map which walls
