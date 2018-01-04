@@ -18,7 +18,7 @@ type Command = World -> World
 -- Creates a new simulator and runs it on another thread.
 openSimulator :: IO Simulator
 openSimulator = do
-  txt <- readFile "worlds/world1.txt"
+  txt <- readFile "worlds/lines.txt"
   let world = makeWorld txt
   m <- newMVar world
   let s = Simulator m
