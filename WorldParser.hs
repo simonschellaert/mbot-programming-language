@@ -26,7 +26,7 @@ data World = World { wRobot :: Robot
                    , wLines :: [Line]
                    } deriving (Eq, Ord, Show)
 
-emptyRobot = Robot 0 0 (0.0, 0.0) 0 (255, 0, 0) (0, 255, 0)
+emptyRobot = Robot 0 0 (0.0, 0.0) 0 (255, 255, 255) (255, 255, 255)
 emptyWorld = World { wRobot = emptyRobot, wWalls = [], wLines = [] }
 
 addPiece :: Coord -> Char -> World -> World
