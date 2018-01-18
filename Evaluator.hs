@@ -2,18 +2,18 @@ module Evaluator (AExpr(..), BExpr(..),
                   Stmt(..), Command(..), Device(..), Sensor(..), Direction(..), Duration(..), Flank(..),
                   runStmt) where
 
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Except
-import Control.Monad.Identity
-import Control.Monad.Reader
-import Control.Monad.State
-import Data.Char
-import Data.List
-import qualified Data.Map as Map
-import Data.Maybe
-import Data.Foldable
-import Prelude hiding (Left, Right)
+import           Control.Applicative
+import           Control.Monad
+import           Control.Monad.Except
+import           Control.Monad.Identity
+import           Control.Monad.Reader
+import           Control.Monad.State
+import           Data.Char
+import           Data.Foldable
+import           Data.List
+import qualified Data.Map               as Map
+import           Data.Maybe
+import           Prelude                hiding (Left, Right)
 
 data AExpr = AConst Int
            | AVar Name
@@ -134,8 +134,8 @@ eval (Assign name e) = do val <- evalA e
 -- Note that an eventual else branch always appears last with `BConst True` as its condition.
 eval (If branches) = do conditions <- mapM (evalB . fst) branches
                         case findIndex id conditions of
-                            Just i   -> eval . snd . (!!i) $ branches
-                            Nothing  -> return ()
+                            Just i  -> eval . snd . (!!i) $ branches
+                            Nothing -> return ()
 
 -- Evaluates a while statement by evaluating the condition, and iff the condition is true, evaluating the body and then
 -- restarting this procedure.

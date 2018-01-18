@@ -1,16 +1,16 @@
 module Parser where
 
-import Control.Applicative
-import Control.Monad
-import Control.Monad.State
-import Data.Char
-import qualified Data.Map as Map
-import Data.List
-import Data.Maybe
-import Data.Foldable
-import Evaluator
-import qualified Text.Read as Read
-import Prelude hiding (Left, Right)
+import           Control.Applicative
+import           Control.Monad
+import           Control.Monad.State
+import           Data.Char
+import           Data.Foldable
+import           Data.List
+import qualified Data.Map            as Map
+import           Data.Maybe
+import           Evaluator
+import           Prelude             hiding (Left, Right)
+import qualified Text.Read           as Read
 
 -- Let's start by creating the Parser monad we all know and love. After creating the monad-instance, we can create the
 -- functor and applicative instance with minimal effort.
