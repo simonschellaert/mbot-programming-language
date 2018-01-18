@@ -1,6 +1,6 @@
 module Util where
-  
-import WorldParser
+
+import           WorldParser
 
 rotateAround :: Coord -- Origin
              -> Angle -- Angle in radians

@@ -1,16 +1,15 @@
 module SimulatorInterface where
 
-import           Control.Concurrent               (MVar, forkIO, newMVar,
-                                                   putMVar, readMVar, takeMVar,
-                                                   threadDelay)
+import           Control.Concurrent            (MVar, forkIO, newMVar, putMVar,
+                                                readMVar, takeMVar, threadDelay)
 import           Data.Fixed
-import           Data.Maybe                       (mapMaybe)
+import           Data.Maybe                    (mapMaybe)
 import           Graphics.Gloss.Data.Vector
 import           Graphics.Gloss.Geometry.Angle
 import           Graphics.Gloss.Geometry.Line
-import           WorldParser
-import           Util
 import           GUI
+import           Util
+import           WorldParser
 
 newtype Simulator = Simulator (MVar World)
 type Command = World -> World

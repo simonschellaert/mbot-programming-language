@@ -2,7 +2,7 @@ module WorldParser where
 
 import           Data.List
 import           Data.Maybe
-import           Data.Tuple()
+import           Data.Tuple ()
 
 type X = Float
 type Y = Float

@@ -10,8 +10,8 @@ import           Graphics.Gloss.Data.Vector
 import           Graphics.Gloss.Geometry.Angle
 import           Graphics.Gloss.Geometry.Line
 import qualified Graphics.Gloss.Interface.IO.Game as G
-import           WorldParser
 import           Util
+import           WorldParser
 
 -- The size of one cell.
 cell = 32.0
