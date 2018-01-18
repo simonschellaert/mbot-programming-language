@@ -1,4 +1,4 @@
-module GUI where
+module Gui where
 
 import           Control.Concurrent               (MVar, forkIO, newMVar,
                                                    putMVar, readMVar, takeMVar,

@@ -7,7 +7,7 @@ import           Data.Maybe                    (mapMaybe)
 import           Graphics.Gloss.Data.Vector
 import           Graphics.Gloss.Geometry.Angle
 import           Graphics.Gloss.Geometry.Line
-import           GUI
+import           Gui
 import           Util
 import           WorldParser
 
