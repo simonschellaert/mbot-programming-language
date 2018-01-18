@@ -6,7 +6,7 @@ import           Evaluator
 import qualified SimulatorInterface as S
 
 main = do s <- S.openSimulator
-          S.sendCommand s $ S.setMotor 9 10
+          S.sendCommand s $ S.setMotor 5 5
           loop s
 
 loop s = do val <- S.readLineFollower s

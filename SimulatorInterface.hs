@@ -18,7 +18,7 @@ type Command = World -> World
 -- Creates a new simulator and runs it on another thread.
 openSimulator :: IO Simulator
 openSimulator = do
-  txt <- readFile "worlds/lines.txt"
+  txt <- readFile "worlds/world1.txt"
   let world = makeWorld txt
   m <- newMVar world
   let s = Simulator m
@@ -92,15 +92,11 @@ getLineStatus world@(World robot _ lns)
         angle = rAngle robot
         left = rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y)
         right =  rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y + 1.0)
-        closestPoint = uncurry closestPointOnLine
-        isOnLine point ln = distance (closestPoint ln point) point <= 1 / 2
-        isWithinBounds (xa, ya) ((x0, y0), (x1, y1)) =  (x0 <= xa && xa <= x1)
-                                                     || (x1 <= xa && xa <= x0)
-                                                     || (y0 <= ya && ya <= y1)
-                                                     || (y1 <= ya && ya <= y0)
+        isOnSegment point (start, end) = distance closest point <= 1 / 2
+                                       && abs (distance start end - (distance start closest + distance closest end)) < 0.001
+          where closest = closestPointOnLine start end point
         lns' = map adjustLine lns
-        isOnBlack point = any (\ln -> isWithinBounds point ln
-                                      && isOnLine point ln) lns'
+        isOnBlack point = any (isOnSegment point) lns'
 
 -- Translates the coordinates so that they will be in the middle of a square instead of the beginning.
 adjustLine :: Line -> Line
