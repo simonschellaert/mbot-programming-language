@@ -89,8 +89,8 @@ getLineStatus world@(World robot _ lns)
   | otherwise = 0
   where (x, y) = rPosition robot
         angle = rAngle robot
-        left = rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y)
-        right =  rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y + 1.0)
+        left = rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y + 0.4)
+        right =  rotateAround (x + 0.5, y + 0.5) angle (x + 1.0, y + 0.6)
         isOnSegment point (start, end) = distance closest point <= 1 / 2
                                        && abs (distance start end - (distance start closest + distance closest end)) < 0.001
           where closest = closestPointOnLine start end point
