@@ -22,7 +22,6 @@ data AExpr = AConst Int
            | AExpr :-: AExpr
            | AExpr :*: AExpr
            | AExpr :/: AExpr
-           deriving (Show)
 
 data BExpr = BConst Bool
            | Not BExpr
@@ -31,7 +30,6 @@ data BExpr = BConst Bool
            | AExpr :<: AExpr
            | AExpr :=: AExpr
            | AExpr :>: AExpr
-           deriving (Show)
 
 data Stmt  = Assign String AExpr
            | Seq [Stmt]
@@ -39,19 +37,15 @@ data Stmt  = Assign String AExpr
            | While BExpr Stmt
            | Exec Command
            | Skip
-           deriving (Show)
 
 data Command = Drive Direction
              | Sleep Duration
              | Light Flank AExpr AExpr AExpr
-             | Sound Duration AExpr
-             | Print String
-             deriving (Show)
 
-data Sensor    = Line | Distance deriving (Show, Eq)
-data Direction = Left | Right | Up | Down deriving (Show, Eq)
-data Duration  = VeryShort | Short | Medium | Long | VeryLong | Exact AExpr deriving (Show)
-data Flank     = LeftFlank | RightFlank deriving (Show, Eq)
+data Sensor    = Line | Distance
+data Direction = Left | Right | Up | Down deriving (Eq)
+data Duration  = VeryShort | Short | Medium | Long | VeryLong | Exact AExpr
+data Flank     = LeftFlank | RightFlank deriving (Eq)
 
 -- By passing a device to the evaluator, the user can choose ad-hoc how to handle each supported command. The evaluator
 -- itself is device-agnostic and just calls the appropriate methods on the passed device. This allows the user to
@@ -60,7 +54,6 @@ data Device = Device {
     sleep        :: Int -> IO (),                       -- Sleep for the specified number of milliseconds
     setRGB       :: Int -> Int -> Int -> Int -> IO (),  -- Set left (0) or right (1) LED to the specified RGB values
     setMotor     :: Int -> Int -> IO (),                -- Set left and right motor speeds
-    playTone     :: Int -> Int -> IO (),                -- Play a tone with the specified frequency and duration
     readDistance :: IO Int,                             -- Read the distance reported by the ultrasonic sensor
     readLine     :: IO Int                              -- Read the measurement reported by the line follower
 }
@@ -164,13 +157,3 @@ eval (Exec (Drive dir)) = do let speed = fromJust . (`Data.List.lookup` directio
 eval (Exec (Light flank r g b)) = do let light = if flank == LeftFlank then 1 else 2
                                      cmd <- asks setRGB
                                      liftIO =<< liftM4 cmd (return light) (evalA r) (evalA g) (evalA b)
-
--- Evaluates a statement calling the sound command. We simply evaluate both the frequency and the duration and then
--- send a command to the device with the appropriate arguments.
-eval (Exec (Sound dur freq)) = do cmd <- asks playTone
-                                  liftIO =<< liftM2 cmd (evalA freq) (evalDuration dur)
-
--- TODO: Remove print command (both in evaluation and in command type)
-eval (Exec (Print txt)) = liftIO. putStrLn $ txt
-
--- TODO: Remove `deriving (Show)`

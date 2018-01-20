@@ -231,7 +231,7 @@ whileStatement = do whileSymbol
 
 -- A parser for a command statement. The command is always one of the pre-defined types.
 cmdStatement :: Parser Stmt
-cmdStatement = driveCmdStatement <|> sleepCmdStatement <|> lightCmdStatement <|> printCmdStatement
+cmdStatement = driveCmdStatement <|> sleepCmdStatement <|> lightCmdStatement
 
 -- Parsers for the various commands. Most of these should be straightforward. They all first parse the symbol indicating
 -- the command and then attempt to parse their arguments.
@@ -257,12 +257,6 @@ lightCmdStatement = do lightSymbol
                        flank <- ops [(leftFlankSymbol, LeftFlank), (rightFlankSymbol, RightFlank)]
                        cmd <- liftM3 (Light flank) aExpression aExpression aExpression
                        return . Exec $ cmd
-
--- TODO: Remove this
-printCmdStatement :: Parser Stmt
-printCmdStatement = do printSymbol
-                       text <- first . many $ sat (/='\n')
-                       return . Exec . Print $ text
 
 -- A parser for skip (= comment) statements. That is, it consumes the skip symbol and then consumes all remaining
 -- characters until the end of the line.
@@ -321,7 +315,6 @@ distanceSymbol   = symbol "📏"
 lineSymbol       = symbol "🔭"
 assignSymbol     = symbol "⏪"
 lightSymbol      = symbol "🚨"
-printSymbol      = symbol "🖋"
 zeroSymbol       = symbol "🌕"
 oneSymbol        = symbol "🌗"
 twoSymbol        = symbol "🌓"
@@ -340,7 +333,3 @@ indentSymbol     = symbol "{"
 dedentSymbol     = symbol "}"
 openParSymbol    = symbol "("
 closeParSymbol   = symbol ")"
-
-
-
--- TODO: Implement music statement

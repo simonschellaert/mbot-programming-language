@@ -15,7 +15,6 @@ initialize mDevice = do args <- getArgs
                         let inp' = preprocess input
                         putStrLn inp'
                         let out = parse statementSeq inp'
-                        print out
                         unless (null out) (do let prog = fst (head out)
                                               runStmt mDevice prog
                                               return ())
