@@ -129,7 +129,7 @@ $(document).ready(function() {
 <h1>1. Introductie</h1>
 
 <p>
-In het kader van het project voor het vak Functioneel Programmeren, ontwikkelden we de taal 🤖.
+    In het kader van het project voor het vak Functioneel Programmeren ontwikkelden we de taal 🤖.
     Deze taal kan gebruikt worden om een fysieke mBot of een virtuele mBot in de simulator, die we eveneens
     ontwikkelden, aan te sturen.
     Geïnspireerd door de overweldigende populariteit van Emoji, besloten we in de syntax veelvuldig gebruik te maken van
@@ -261,7 +261,7 @@ _Flank_      := 👈 | 👉
 <h3>Command</h3>
 
 <p>
-    Dit stelt een commando voor dat naar de MBot of de simulator wordt gestuurd.
+    Dit stelt een commando voor dat naar de mBot of de simulator wordt gestuurd.
     We onderscheiden vier types commando's. De argumenten van een commando worden van elkaar gescheiden door een spatie.
 </p>
 
@@ -357,7 +357,7 @@ Tenslotte wachten we opnieuw 400 ms en wordt de lus opnieuw uitgevoerd.
 <pre><code class="language-markup line-numbers" data-include-file="/programs/avoid.txt"></code></pre>
 <p>
 Het merendeel van de functionaliteit situeert zich wederom in een oneindige lus.
-In deze lus wordt de afstandsensor (📏) uitgelezen en vergeleken met de voorafbepaalde threshold <em>dist</em>.
+In deze lus wordt de afstandssensor (📏) uitgelezen en vergeleken met de voorafbepaalde threshold <em>dist</em>.
 Indien de afstand tot een object groter is dan deze threshold, blijft de robot rechtdoor rijden.
 Indien niet, dan rijden we gedurende 800 ms achteruit en draaien we vervolgens gedurende 400 ms naar rechts vooraleer de lus opnieuw wordt uitgevoerd.
 </p>
@@ -384,8 +384,8 @@ We overlopen nu kort de belangrijkste punten van onze implementatie.
 <h2>Preprocessor</h2>
 <p>
     De eerste stap na het inlezen van het invoerprogramma is het verwerken door de preprocessor.
-    Doordat onze taal in plaats van paren van overeenkomstige haakjes gebruik maakt van indentatie (de zgn. off-side rule) om
-    blokken aan te duiden, is de taal namelijk niet langer context-vrij.
+    Doordat onze taal, in plaats van paren van overeenkomstige haakjes, gebruik maakt van indentatie (de zgn. off-side rule) om
+    blokken aan te duiden, is de taal namelijk niet langer contextvrij.
     Het parsen van een niet-contextvrije taal kan echter al snel relatief ingewikkeld worden.
     Gelukkig bestaat er een elegant trukje, dat onder andere door parsers voor Python wordt gebruikt, om alsnog een contextvrije taal te
     bekomen. Op die manier kunnen we vervolgens opnieuw gebruik maken van de klassieke Parser-monad.
@@ -404,7 +404,7 @@ We overlopen nu kort de belangrijkste punten van onze implementatie.
 <p>
    Na het preprocessen, wordt het programma vervolgens geparset met behulp van de Parser-monad.
    De meeste functies die we gedefinieerd hebben, komen rechtstreeks overeen met syntaxelementen uit de Backus-Naur form.
-   Zo is er een parser voor aritmetische expressies <span class="ref">Parser.hs: 161</span> en booleanse expressies <span class="ref">Parser.hs: 180</span>.
+   Zo is er een parser voor aritmetische expressies <span class="ref">Parser.hs: 161</span> en booleaanse expressies <span class="ref">Parser.hs: 180</span>.
    Het programma zelf is dan weer een sequentie van statements <span class="ref">Parser.hs: 196</span>.
    Om te vermijden dat de Emojis verspreid staan doorheen onze code, aggregeren we alle constante symbolen onderaan het bestand <span class="ref">Parser.hs: 292</span>.
 </p>
@@ -423,9 +423,9 @@ We overlopen nu kort de belangrijkste punten van onze implementatie.
 <h2>Fysieke mBot</h2>
 <p>
    Om het programma uit te voeren op de fysieke mBot, moet er eerst een geschikt device worden aangemaakt dat communiceert met de mBot <span class="ref">Interpreter.hs: 8</span>.
-   Vervolgens kan het meegegeven programma ingelezen, geparset en geevalueerd worden met het zonet aangemaakte device.
+   Vervolgens kan het meegegeven programma ingelezen, geparset en geëvalueerd worden met het zonet aangemaakte device.
    Merk op dat deze laatste stappen ook van toepassing zijn bij uitvoering op de simulator.
-   Om code-duplicatie te vermijden, hebben we deze functionaliteit dan ook ondergebracht in een functie <code>initialize</code> <span class="ref">Initialize.hs: 12</span>.
+   Om code duplicatie te vermijden, hebben we deze functionaliteit dan ook ondergebracht in een functie <code>initialize</code> <span class="ref">Initialize.hs: 12</span>.
    Die functie kan vervolgens opgeroepen worden met een geschikt device om het inlezen, parsen en uitvoeren van het programma te starten.
 </p>
 
@@ -490,7 +490,7 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 <h1>6. Conclusie</h1>
 
 <p>
-    De programmeertaal 🤖 kan gebruikt worden om een al dan niet virtuele MBot aan te sturen.
+    De programmeertaal 🤖 kan gebruikt worden om een al dan niet virtuele mBot aan te sturen.
     De meeste klassieke functionaliteiten, zoals aritmetische en booleaanse expressies, conditionele statements en lussen worden ondersteund door de taal.
     Verder ontwikkelden we ook een simulator waarin een mBot kan rondrijden in een fictieve wereld.
     De mBot in deze simulator ondersteunt alle mogelijkheiden die de echte mBot aanbiedt.
@@ -521,7 +521,7 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
         Zoals hierboven reeds vermeld, zou de simulatie nog uitgebreid kunnen worden zodat deze de werkelijkheid beter benadert.
     </li>
     <li><strong>Verbeterde collision detection</strong><br/>
-        Momenteel worden de uitstekende wielen van de MBot genegeerd bij collision detection. Deze ook in rekening brengen zou de simulatie eveneens realistischer maken.</li>
+        Momenteel worden de uitstekende wielen van de mBot genegeerd bij collision detection. Deze ook in rekening brengen zou de simulatie eveneens realistischer maken.</li>
 </ul>
 
 
