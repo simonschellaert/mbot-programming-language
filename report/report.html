@@ -98,7 +98,7 @@ $(document).ready(function() {
         }
 
         pre {
-            font-size: 15px;
+            font-size: 10px;
         }
 
         p code {
@@ -226,7 +226,7 @@ _Flank_      := 👈 | 👉
 <h3>Assignment</h3>
 
 <p>
-    Dit is een toekenning. De waarde van de arithmetische expressie rechts van het toekenningsteken (⏪) wordt opgeslagen
+    Dit is een toekenning. De waarde van de aritmetische expressie rechts van het toekenningsteken (⏪) wordt opgeslagen
     onder de naam <em>Identifier</em>, die links die van het toekenningsteken staat.
 </p>
 
@@ -273,7 +273,7 @@ _Flank_      := 👈 | 👉
 <p>
     Slaap even alvorens verder te gaan met de uitvoering.
     Gedurende het slapen blijft de MBot actief. Hij rijdt dus gewoon verder in de richting waarin hij reeds aan het rijden was.
-    Als argument kan een arithmetische expressie, die het aantal te slapen milliseconden voorstelt, meegegeven worden.
+    Als argument kan een aritmetische expressie, die het aantal te slapen milliseconden voorstelt, meegegeven worden.
     Een andere mogelijkheid is om gebruik te maken van één van de ingebouwde constanten om 400 ms (🕑), 800 ms (🕔), 1200 ms (🕧), 1600 ms (🕖) of 2 s (🕙) te slapen.
 </p>
 
@@ -282,20 +282,20 @@ _Flank_      := 👈 | 👉
 <p>
     Laat het opgegeven lichtje branden in de opgegeven kleur.
     Het eerste argument duidt aan als het commando betrekking heeft op het linkse (👈) of rechtse (👉) lichtje.
-    De volgende drie argumenten zijn arithmetische expressies die de RGB-waarde van het in te stellen kleur voorstellen.
+    De volgende drie argumenten zijn aritmetische expressies die de RGB-waarde van het in te stellen kleur voorstellen.
     Het bereik van de RGB-waarden loopt van 0 t.e.m. 100 en waarden buiten dit interval worden geclipped.
 </p>
 
 <p>
-    In de bovenstaande bespreking van statements, werden de termen <em>booleanse expressie</em> en <em>arithmetische
+    In de bovenstaande bespreking van statements, werden de termen <em>booleanse expressie</em> en <em>aritmetische
     expressie</em> veelvuldig gebruikt.
     We leggen nu ook de semantiek van deze taalelementen precies vast.
 </p>
 
-<h3>Arithmetische expressies</h3>
+<h3>Aritmetische expressies</h3>
 
 <p>
-    Een arithmetische expressie is een uitdrukking die als resultaat een geheel getal oplevert.
+    Een aritmetische expressie is een uitdrukking die als resultaat een geheel getal oplevert.
     Om de prioriteit van de bewerkingen eenduidig vast te leggen, gebruiken we een hiërarchie van taalelementen.
     Een expressie bestaat uit één of meerdere termen gescheiden door een plus- of min-symbool.
     Deze twee operatoren zijn links-associatief en hebben de laagste prioriteit.
@@ -353,8 +353,8 @@ Tenslotte wachten we opnieuw 400 ms en wordt de lus opnieuw uitgevoerd.
 <pre><code class="language-markup line-numbers" data-include-file="/programs/avoid.txt"></code></pre>
 <p>
 Het merendeel van de functionaliteit situeert zich wederom in een oneindige lus.
-In deze lus wordt de afstandsensor (📏) uitgelezen en vergeleken met de voorafbepaalde treshold <em>dist</em>.
-Indien de afstand tot een object groter is dan deze treshold, blijft de robot rechtdoor rijden.
+In deze lus wordt de afstandsensor (📏) uitgelezen en vergeleken met de voorafbepaalde threshold <em>dist</em>.
+Indien de afstand tot een object groter is dan deze threshold, blijft de robot rechtdoor rijden.
 Indien niet, dan rijden we gedurende 800 ms achteruit en draaien we vervolgens gedurende 400 ms naar rechts vooraleer de lus opnieuw wordt uitgevoerd.
 </p>
 
@@ -363,10 +363,10 @@ Indien niet, dan rijden we gedurende 800 ms achteruit en draaien we vervolgens g
 <pre><code class="language-markup line-numbers" data-include-file="/programs/line.txt"></code></pre>
 <p>
 Net zoals bij de vorige twee programma's, wordt ook hier het merendeel van het werk uitgevoerd in de oneindige lus.
-Het programma wordt ietsje ingewikkelder doordat we merkten dat de mBot soms kortstondig de lijn kwijtraakt.
-Om te vermijden dat hij dan volledig de mist in gaat, houden we telkens de meest recente nuttige waarde van de lijnsensor bij in de variabele <em>prev</em>.
+Het programma is ietsje ingewikkelder doordat we merkten dat de mBot soms kortstondig de lijn kwijtraakt.
+Om te vermijden dat het lijn-volgen vervolgens volledig de mist in gaat, houden we telkens de meest recente bruikbare waarde van de lijnsensor bij in de variabele <em>prev</em>.
 Het eerste wat we doen in de lus is het uitlezen van de laatste waarde van de lijnsensor.
-Vervolgens controleren we als we iets met deze waarde kunnen aanvangen. Indien de waarde namelijk tweemaal wit is, hergebruiken we de laatste geldige waarde uit <em>prev</em>.
+Vervolgens controleren we als we iets met deze waarde kunnen aanvangen. Indien de waarde namelijk tweemaal wit is, hergebruiken we de laatste geldige waarde die opgeslagen zit in <em>prev</em>.
 Indien de waarde ofwel links ofwel rechts zwart is, slaan we deze waarde op.
 Vervolgens sturen we de motoren aan op basis van deze waarde.
 Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts) zwart zien of rijden we rechtdoor indien we tweemaal zwart uitlezen.
@@ -379,12 +379,12 @@ We overlopen nu kort de belangrijkste punten van onze implementatie.
 
 <h2>Preprocessor</h2>
 <p>
-    De eerste stap na het inlezen van het invoerbestand, is het verwerken door de preprocessor.
-    Doordat onze taal i.p.v. paren van overeenkomstige haakjes gebruikt maakt van indentatie (de zgn. off-side rule) om
+    De eerste stap na het inlezen van het invoerprogramma is het verwerken door de preprocessor.
+    Doordat onze taal in plaats van paren van overeenkomstige haakjes gebruik maakt van indentatie (de zgn. off-side rule) om
     blokken aan te duiden, is de taal namelijk niet langer context-vrij.
-    Het parsen van een niet-contextvrije taal kan echter snel relatief ingewikkeld worden. Gelukkig bestaat er een
-    elegant trukje, dat onder andere door parsers voor Python wordt gebruikt, om alsnog een contextvrije taal te
-    bekomen.
+    Het parsen van een niet-contextvrije taal kan echter al snel relatief ingewikkeld worden.
+    Gelukkig bestaat er een elegant trukje, dat onder andere door parsers voor Python wordt gebruikt, om alsnog een contextvrije taal te
+    bekomen. Op die manier kunnen we vervolgens opnieuw gebruik maken van de klassieke Parser-monad.
     Het trukje bestaat eruit om onze taal eerst te laten verwerken door een preprocessor die telkens een
     <code>INDENT</code> token toevoegt als de indentatie vermeerdert en een <code>DEDENT</code> token als deze
     vermindert.
@@ -398,9 +398,9 @@ We overlopen nu kort de belangrijkste punten van onze implementatie.
 
 <h2>Parser</h2>
 <p>
-   Na het preprocessen, wordt het programma vervolgens geparset m.b.v. de Parser-monad.
+   Na het preprocessen, wordt het programma vervolgens geparset met behulp van de Parser-monad.
    De meeste functies die we gedefinieerd hebben, komen rechtstreeks overeen met syntaxelementen uit de Backus-Naur form.
-   Zo is er een parser voor arithmetische expressies <span class="ref">Parser.hs: 161</span> en booleanse expressies <span class="ref">Parser.hs: 180</span>.
+   Zo is er een parser voor aritmetische expressies <span class="ref">Parser.hs: 161</span> en booleanse expressies <span class="ref">Parser.hs: 180</span>.
    Het programma zelf is dan weer een sequentie van statements <span class="ref">Parser.hs: 196</span>.
    Om te vermijden dat de Emojis verspreid staan doorheen onze code, aggregeren we alle constante symbolen onderaan het bestand <span class="ref">Parser.hs: 292</span>.
 </p>
@@ -419,7 +419,7 @@ We overlopen nu kort de belangrijkste punten van onze implementatie.
 <h2>Fysieke mBot</h2>
 <p>
    Om het programma uit te voeren op de fysieke mBot, moet er eerst een geschikt device worden aangemaakt dat communiceert met de mBot <span class="ref">Interpreter.hs: 8</span>.
-   Vervolgens kan het meegegeven programma ingelezen, geparsed en geevalueerd worden met het zonet gemaakte device.
+   Vervolgens kan het meegegeven programma ingelezen, geparset en geevalueerd worden met het zonet aangemaakte device.
    Merk op dat deze laatste stappen ook van toepassing zijn bij uitvoering op de simulator.
    Om code-duplicatie te vermijden, hebben we deze functionaliteit dan ook ondergebracht in een functie <code>initialize</code> <span class="ref">Initialize.hs: 12</span>.
    Die functie kan vervolgens opgeroepen worden met een geschikt device om het inlezen, parsen en uitvoeren van het programma te starten.
@@ -438,7 +438,7 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 <h4>Collision detection</h4>
 
 <p>
-    Collision detection wordt geïmplementeerd door te kijken of er ten minste één van de acht punten aangeduid op de
+    Collision detection is geïmplementeerd door te kijken of er ten minste één van de acht punten aangeduid op de
     onderstaande figuur zich in een muur bevindt. Opmerkelijk hierbij is dat we niet enkel de hoekpunten van de robot
     controleren.
 </p>
@@ -446,7 +446,7 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 <p style="text-align: center"><img src="points.png"/></p>
 
 <p>
-    De nood aan de 4 extra punten wordt geïllustreerd aan de hand van de volgende twee scenario's. In het eerste scenario
+    De nood aan de 4 extra punten wordt geïllustreerd aan de hand van de volgende twee scenario's: In het eerste scenario
     wil de robot zich door een kleine ingang tussen twee muren bewegen. Een muur en de robot zijn precies even groot dus
     zullen de hoekpunten van de robot precies samenvallen met de rand van de muur. We zijn dus genoodzaakt om punten die
     precies op de rand vallen niet te zien als collisions.
@@ -486,30 +486,40 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 <h1>6. Conclusie</h1>
 
 <p>
-    De programmeertaal ? kan gebruikt worden om een, al dan niet virtuele, MBot aan te sturen. ? ondersteunt onder andere
-    arithmetische- en booleaanse expressies, conditionele statements en lussen.
-    We hebben ook een simulator ontwikkeld waarin een MBot kan rondrijden in een fictieve wereld.
-    De MBot in deze simulator ondersteunt alle functionaliteit die een echte MBot aanbiedt.
+    De programmeertaal 🤖 kan gebruikt worden om een al dan niet virtuele MBot aan te sturen.
+    De meeste klassieke functionaliteiten, zoals aritmetische en booleaanse expressies, conditionele statements en lussen worden ondersteund door de taal.
+    Verder ontwikkelden we ook een simulator waarin een mBot kan rondrijden in een fictieve wereld.
+    De mBot in deze simulator ondersteunt alle mogelijkheiden die de echte mBot aanbiedt.
 </p>
 
 <p>
-    Niet alle programma's werken even goed in de simulator als in de echte wereld.
-    De grootste oorzaak hiervan is dat de simulator en de echte wereld een andere grootheid gebruiken voor afstand.
-    Eén in de echte wereld stelt 1 centimeter voor, wat relatief dicht is voor de MBot, terwijl dit in de simulator één vakje is.
-    We hebben dit probleem grotendeels kunnen oplossen door een tussenstap toe te voegen die de grootheid van de simulator
-    converteert naar een grootheid die beter overeenkomt met de echte wereld.
-    Hierdoor werken de voorbeeldprogramma's in beide gevallen, maar deze oplossing is natuurlijk niet optimaal.
+    Een obstakel waarmee we te maken kregen is dat niet alle programma's even goed werken in de simulator als in de echte wereld.
+    De belangrijkste oorzaak hiervan is dat de wiskundige formules die gebruikt worden in de simulatie geen perfecte weerspiegeling zijn van de werkelijkheid.
+    Hierdoor gedraagt de mBot zich niet altijd helemaal zoals je zou verwachten en is bv. het volgen van de lijn soms schokkerig.
+    Door empirisch wat te spelen met de parameters van de simulatie hebben we dit probleem echter deels kunnen verhelpen.
 </p>
 
 <p>
-    Hieronder volgt een lijst van enkele verbeteringen die nog kunnen worden toegevoegd:
+    Verder zijn we persoonlijk wel tevreden over onze implementatie.
+    We hebben er heel wat tijd in gestoken maar zijn wel fier op het resultaat.
+    Indien de tijd ons dat toeliet, hadden wij uiteraard nog enkele verbeteringen kunnen doorvoeren zoals:
 </p>
 
 <ul>
-    <li><em>Floating point getallen:</em> dit wordt nog niet ondersteund door de programmeertaal.</li>
-    <li><em>Error handling:</em> de parser van de programmeertaal en de wereld bevatten nog geen error handling.</li>
-    <li><em>Verbeterde collision detection:</em>momenteel worden de uitstekende wielen van de MBot genegeerd bij collision detection.</li>
+    <li><strong>Meerdere gegevenstypes</strong><br/>
+       Momenteel is het enkel mogelijk om gehele getallen op te slaan in variabelen.
+       De taal zou nog uitgebreid kunnen worden zodat het ook mogelijk is om vlottende kommagetallen en booleaanse waarden op te slaan.
+    </li>
+    <li><strong>Foutafhandeling</strong><br/>
+        Op dit moment is foutafhandeling nog erg beperkt. Zo zijn de foutmeldingen die opgegooid worden wanneer de invoer een syntaxfout bevat niet erg behulpzaam.
+    </li>
+    <li><strong>Realistischere simulatie</strong><br/>
+        Zoals hierboven reeds vermeld, zou de simulatie nog uitgebreid kunnen worden zodat deze de werkelijkheid beter benadert.
+    </li>
+    <li><strong>Verbeterde collision detection</strong><br/>
+        Momenteel worden de uitstekende wielen van de MBot genegeerd bij collision detection. Deze ook in rekening brengen zou de simulatie eveneens realistischer maken.</li>
 </ul>
+
 
 <h1>7. Broncode</h1>
 
