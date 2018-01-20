@@ -20,6 +20,8 @@ $(document).ready(function() {
                $('p').html((_, old) => old.replace(/([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF]|⏪|⬆️|⬇️|⬅️|➡️)/g, (_, emoji) => '<span class="emoji">' + emoji + '</span>'));
    // Include each of the files referenced with a `data-include-file` tag and then run syntax highlighting on the page
    $("[data-include-file]").each((_, el) => $(el).load($(el).attr('data-include-file'), null, () => Prism.highlightAll()));
+
+   $(".ref").text((_, old) => "[" + old + "]");
 });
 </script>
 
@@ -97,6 +99,15 @@ $(document).ready(function() {
 
         pre {
             font-size: 15px;
+        }
+
+        p code {
+            font-size: 0.75em;
+        }
+
+        .ref {
+            font-size: 0.6em;
+            vertical-align: 10px;
         }
 
         .token.operator {
@@ -362,11 +373,13 @@ Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts
 
 <h1>5. Implementatie</h1>
 
-<h2>Preprocessor</h2>
+We overlopen nu kort de belangrijkste punten van onze implementatie.
 
+<h2>Preprocessor</h2>
 <p>
+    De eerste stap na het inlezen van het invoerbestand, is het verwerken door de preprocessor.
     Doordat onze taal i.p.v. paren van overeenkomstige haakjes gebruikt maakt van indentatie (de zgn. off-side rule) om
-    blokken aan te duiden, is de taal niet langer context-vrij.
+    blokken aan te duiden, is de taal namelijk niet langer context-vrij.
     Het parsen van een niet-contextvrije taal kan echter snel relatief ingewikkeld worden. Gelukkig bestaat er een
     elegant trukje, dat onder andere door parsers voor Python wordt gebruikt, om alsnog een contextvrije taal te
     bekomen.
@@ -377,22 +390,50 @@ Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts
     vervolgens een nieuwe taal die wel contextvrij is.
     Deze nieuwe taal, met als enige verschil dat alle indentatie vervangen is door
     <code>INDENT</code>/<code>DEDENT</code> tokens, wordt vervolgens verwerkt door de parser, die geen rekening meer
-    hoeft te houden met indentatie.
-
+    hoeft te houden met indentatie. Concreet gebeurt deze transformatie in de functie <code>preprocess</code> <span class="ref">Parser.hs: 271</span>.
 
 </p>
 
-<h2>Communicatie tussen programma en simulator</h2>
-
+<h2>Parser</h2>
 <p>
-    De communicatie tussen het programma en de simulator gebeurt met behulp van een <code>MVar</code>. De
+   Na het preprocessen, wordt het programma vervolgens geparset m.b.v. de Parser-monad.
+   De meeste functies die we gedefinieerd hebben, komen rechtstreeks overeen met syntaxelementen uit de Backus-Naur form.
+   Zo is er een parser voor arithmetische expressies <span class="ref">Parser.hs: 161</span> en booleanse expressies <span class="ref">Parser.hs: 180</span>.
+   Het programma zelf is dan weer een sequentie van statements <span class="ref">Parser.hs: 196</span>.
+   Om te vermijden dat de Emojis verspreid staan doorheen onze code, aggregeren we alle constante symbolen onderaan het bestand <span class="ref">Parser.hs: 292</span>.
+</p>
+
+<h2>Evaluator</h2>
+<p>
+   De uitvoer van de parse-fase is uiteindelijk één statement <span class="ref">Evaluator.hs: 34</span> die de AST van het programma voorstelt.
+   Door de functie <code>runStmt</code> <span class="ref">Evaluator.hs: 79</span> op te roepen met dit statement, wordt het programma vervolgens uitgevoerd.
+   Het eerste argument van deze functie is een zogenaamd <code>Device</code> <span class="ref">Evaluator.hs: 53</span>.
+   Dit is een datastructuur die de functies zoals <code>setMotor</code> etc. bevat die opgeroepen worden door de evaluator.
+   Op die manier kan eenvoudig gekozen worden als het programma wordt uitgevoerd op de fysieke mBot <span class="ref">Interpreter.hs: 14</span> of op de simulator <span class="ref">Simulator.hs: 12</span>.
+
+</p>
+
+
+<h2>Fysieke mBot</h2>
+<p>
+   Om het programma uit te voeren op de fysieke mBot, moet er eerst een geschikt device worden aangemaakt dat communiceert met de mBot <span class="ref">Interpreter.hs: 8</span>.
+   Vervolgens kan het meegegeven programma ingelezen, geparsed en geevalueerd worden met het zonet gemaakte device.
+   Merk op dat deze laatste stappen ook van toepassing zijn bij uitvoering op de simulator.
+   Om code-duplicatie te vermijden, hebben we deze functionaliteit dan ook ondergebracht in een functie <code>intialize</code> <span class="ref">Initialize.hs: 12</span>.
+   Die functie kan vervolgens opgeroepen worden met een geschikt device om het inlezen, parsen en uitvoeren van het programma te starten.
+</p>
+
+
+<h2>Simulator</h2>
+<p>
+De communicatie tussen het programma en de simulator gebeurt met behulp van een <code>MVar</code><span class="ref">SimulatorInterface.hs: 18</span>. De
     <code>MVar</code> wrapt een <code>World</code>. Het <code>World</code> datatype bevat alle informatie over de wereld
     en de robot. Beide threads werken met de <code>MVar</code> op dezelfde manier: eerst wordt de wereld uit de <code>MVar</code>
     gehaald, daarna wordt een aangepaste wereld berekend en tenslotte wordt de aangepaste wereld in de <code>MVar</code>
     gestopt.
 </p>
 
-<h2>Collision detection</h2>
+<h4>Collision detection</h4>
 
 <p>
     Collision detection wordt geïmplementeerd door te kijken of er ten minste één van de acht punten aangeduid op de
@@ -400,7 +441,7 @@ Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts
     controleren.
 </p>
 
-<img src="points.png"/>
+<p style="text-align: center"><img src="points.png"/></p>
 
 <p>
     De nood aan de 4 extra punten wordt geïllustreerd aan de hand van de volgende 2 scenario's. In het eerste scenario
@@ -409,7 +450,7 @@ Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts
     precies op de rand vallen niet te zien als collisions.
 </p>
 
-<img src="scenario1.png"/>
+<p style="text-align: center"><img src="scenario1.png"/></p>
 
 <p>
     In het tweede scenario rijdt de robot tegen een muur die zich op dezelfde y-waarde bevindt als de robot. Indien we
@@ -418,9 +459,9 @@ Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts
     dus in staat zijn om door de muur te rijden. We zijn dus genoodzaakt om 4 extra punten te controleren.
 </p>
 
-<img src="scenario2.png"/>
+<p style="text-align: center"><img src="scenario2.png"/></p>
 
-<h2>Ultrasone sensor</h2>
+<h4>Ultrasone sensor</h4>
 
 <p>
     Hiervoor construeren we een denkbeeldig segment die loodrecht staat op het midden van de voorkant van de robot. We
@@ -428,7 +469,7 @@ Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts
     intersectie tot het midden van de voorkant van de robot. De kleinste afstand is de waarde van de ultrasone sensor.
 </p>
 
-<h2>Line follow sensor</h2>
+<h4>Line follow sensor</h4>
 
 <p>
     Hiervoor moeten we controleren of een bepaalde coördinaat zich op een segment bevindt. We staan toe

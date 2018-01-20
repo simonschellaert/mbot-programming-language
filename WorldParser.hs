@@ -55,5 +55,3 @@ addLines w (l:ls) = w { wLines = (x, y):wLines (addLines w ls) }
 makeWorld :: String -> World
 makeWorld txt = addLines (addPieces emptyWorld (unlines pcs)) lns
     where (pcs, lns) = span (notElem '(') (lines txt)
-
---main = readFile "worlds/world1.txt" >>= (print . makeWorld)

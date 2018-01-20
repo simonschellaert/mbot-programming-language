@@ -17,12 +17,11 @@ type Command = World -> World
 -- Creates a new simulator and runs it on another thread.
 openSimulator :: IO Simulator
 openSimulator = do
-  txt <- readFile "worlds/world1.txt"
-  let world = makeWorld txt
-  m <- newMVar world
-  let s = Simulator m
-  _ <- forkIO (runSimulator m)
-  return s
+    world <- fmap makeWorld (readFile "worlds/world1.txt")
+    m <- newMVar world
+    let s = Simulator m
+    forkIO (runSimulator m)
+    return s
 
 -- Sends a command to the simulator.
 sendCommand :: Simulator -> Command -> IO ()
