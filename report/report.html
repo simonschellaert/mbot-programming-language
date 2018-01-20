@@ -366,10 +366,10 @@ Het
 
 <p>
     De communicatie tussen het programma en de simulator gebeurt met behulp van een <code>MVar</code>. De
-    <code>MVar</code> wrapt een <code>World</code>.
-    Het <code>World</code> datatype bevat alle informatie die nodig is om de wereld te kunnen renderen. Beide threads
-    werken met de <code>MVar</code> op dezelfde manier: eerst wordt de wereld uit de <code>MVar</code> gehaald, daarna
-    wordt een aangepaste wereld berekend en tenslotte wordt de aangepaste wereld in de <code>MVar</code> gestopt.
+    <code>MVar</code> wrapt een <code>World</code>. Het <code>World</code> datatype bevat alle informatie over de wereld
+    en de robot. Beide threads werken met de <code>MVar</code> op dezelfde manier: eerst wordt de wereld uit de <code>MVar</code>
+    gehaald, daarna wordt een aangepaste wereld berekend en tenslotte wordt de aangepaste wereld in de <code>MVar</code>
+    gestopt.
 </p>
 
 <h2>Collision detection</h2>
@@ -383,9 +383,9 @@ Het
 <img src="points.png"/>
 
 <p>
-    De nood aan de 4 extra punten wordt uitgelegd aan de hand van de volgende 2 scenario's. In het eerste scenario wil
-    de robot zich door een kleine ingang tussen 2 muren bewegen. Een muur en de robot zijn precies even groot dus zullen
-    de hoekpunten van de robot precies samenvallen met de rand van de muur. We zijn dus genoodzaakt om punten die
+    De nood aan de 4 extra punten wordt geïllustreerd aan de hand van de volgende 2 scenario's. In het eerste scenario
+    wil de robot zich door een kleine ingang tussen 2 muren bewegen. Een muur en de robot zijn precies even groot dus
+    zullen de hoekpunten van de robot precies samenvallen met de rand van de muur. We zijn dus genoodzaakt om punten die
     precies op de rand vallen niet te zien als collisions.
 </p>
 
@@ -396,6 +396,25 @@ Het
     enkel de hoekpunten zouden bekijken, zouden alle punten precies samenvallen met een rand van een muur. Doordat
     punten net op de rand van een muur mogen vallen, zou er dus geen collision zijn. De robot zou
     dus in staat zijn om door de muur te rijden. We zijn dus genoodzaakt om 4 extra punten te controleren.
+</p>
+
+<h2>Ultrasone sensor</h2>
+
+<p>
+    Hiervoor construeren we een denkbeeldig segment die loodrecht staat op het midden van de voorkant van de robot. We
+    berekenen de intersecties van dat segment met de muren. Daarna berekenen we de afstand van elke
+    intersectie tot het midden van de voorkant van de robot. De kleinste afstand is de waarde van de ultrasone sensor.
+</p>
+
+<h2>Line follow sensor</h2>
+
+<p>
+    Hiervoor moeten we controleren of een bepaalde coördinaat zich op een segment bevindt. We staan toe
+    dat een coördinaat zich maximaal een half vakje van het segment bevindt. Eerst berekenen we het punt X op de
+    lijn, waartoe het segment behoort, die zich het dichtst bij de coördinaat bevindt. We moeten controleren of X zich
+    effectief op het segment bevindt. X bevindt zich op het segment gedefineerd door punten A en B a.s.a |AX| +
+    |XB| = |AB|. Indien X zich op het segment bevindt en de afstand tussen X en de coördinaat kleiner is dan een half
+    vakje, dan bevindt de coördinaat zich op het segment.
 </p>
 
 <img src="scenario2.png"/>
