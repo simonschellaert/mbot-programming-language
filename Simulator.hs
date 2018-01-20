@@ -10,13 +10,13 @@ main = do s <- S.openSimulator
           initialize mDevice
 
 simulatorDevice s = Device {
-    sleep        = \x -> putStrLn ("Sleeping for " ++ show x ++ " milliseconds") >> threadDelay (x * 1000),
-    setRGB       = \l r g b -> putStrLn ("Setting light " ++ show l ++ " to " ++ show r ++ ", " ++ show g ++ ", " ++ show b) >> S.sendCommand s (S.setRGB l r g b),
-    setMotor     = \l r -> putStrLn ("Setting motor speed to " ++ show l ++ ", " ++ show r) >> S.sendCommand s (S.setMotor (l `quot` 5) (r `quot` 5)),
-    readDistance = (do val <- S.readUltraSonic s
-                       putStrLn ("read distance " ++ show val)
-                       return (round val * 40)),
-    readLine     = (do line <- S.readLineFollower s
-                       putStrLn ("did read line " ++ show line)
-                       return line)
+    sleep        = \x -> threadDelay (x * 1000),
+    setRGB       = \l r g b -> threadDelay 10 >> S.sendCommand s (S.setRGB l r g b),
+    setMotor     = \l r -> threadDelay 10 >> S.sendCommand s (S.setMotor (l `quot` 5) (r `quot` 5)),
+    readDistance = do val <- S.readUltraSonic s
+                      threadDelay 10
+                      return (round val * 40),
+    readLine     = do line <- S.readLineFollower s
+                      threadDelay 10
+                      return line
 }
