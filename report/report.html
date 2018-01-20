@@ -187,7 +187,7 @@ _BRel_       := _AExp_ < _AExp_ | _AExp_ == _AExp_ | _AExp_ > _AExp_
 
 _Command_    := 💨 _Direction_ | 😴 _Duration_ | 🚨 _Flank_ _AExp_ _AExp_ _AExp_
 _Direction_  := ⬇️ | ➡️ | ⬅️ | ⬆️
-_Duration_   := 🕑 | 🕔 | 🕖 | 🕙 | _AExp_
+_Duration_   := 🕑 | 🕔 | 🕧 | 🕖 | 🕙 | _AExp_
 _Flank_      := 👈 | 👉
 </pre>
 
@@ -261,8 +261,7 @@ _Flank_      := 👈 | 👉
     Slaap even alvorens verder te gaan met de uitvoering.
     Gedurende het slapen, blijft de MBot actief. Hij rijdt m.a.w. verder in de richting waarin hij reeds aan het rijden was.
     Als argument kan een arithmetische expressie, die het aantal te slapen milliseconden voorstelt, meegegeven worden.
-    Een andere mogelijkheid is om gebruik te maken van één van de ingebouwde constanten om 100 ms (🕑), 250 ms (🕔), 500
-    ms (🕖) of 1 s (🕙) te slapen.
+    Een andere mogelijkheid is om gebruik te maken van één van de ingebouwde constanten om 400 ms (🕑), 800 ms (🕔), 1200 ms (🕧), 1600 ms (🕖) of 2 s (🕙) te slapen.
 </p>
 
 <h4>Light</h4>
@@ -330,12 +329,16 @@ _Flank_      := 👈 | 👉
 
 <h2>Politiewagen</h2>
 <pre><code class="language-markup line-numbers" data-include-file="/examples/police.txt"></code></pre>
+Dit programmaatje bestaat uit één oneindige lus.
+In deze lus wordt eerst het linkerledje op rood (RGB-waarde 100 0 0) en het rechterledje op blauw (RGB-waarde 0 0 100) gezet.
+Vervolgens 
 
 <h2>Lijn volgen</h2>
 <pre><code class="language-markup line-numbers" data-include-file="/examples/linefollower.txt"></code></pre>
 
 <h2>Obstakels ontwijken</h2>
 <pre><code class="language-markup line-numbers" data-include-file="/examples/obstacles.txt"></code></pre>
+Het 
 
 <h1>5. Implementatie <span class="emoji">👨‍💻</span></h1>
 
