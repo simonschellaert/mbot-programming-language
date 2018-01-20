@@ -482,6 +482,31 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 
 <h1>6. Conclusie</h1>
 
+<p>
+    De programmeertaal ? kan gebruikt worden om een, al dan niet virtuele, MBot aan te sturen. ? ondersteunt onder andere
+    arithmetische- en booleaanse expressies, conditionele statements en lussen.
+    We hebben ook een simulator ontwikkeld waarin een MBot kan rondrijden in een fictieve wereld.
+    De MBot in deze simulator ondersteunt alle functionaliteit die een echte MBot aanbiedt.
+</p>
+
+<p>
+    Niet alle programma's werken even goed in de simulator als in de echte wereld.
+    De grootste oorzaak hiervan is dat de simulator en de echte wereld een andere grootheid gebruiken voor afstand.
+    Eén in de echte wereld stelt 1 centimeter voor, wat relatief dicht is voor de MBot, terwijl dit in de simulator één vakje is.
+    We hebben dit probleem grotendeels kunnen oplossen door een tussenstap toe te voegen die de grootheid van de simulator
+    converteert naar een grootheid die beter overeenkomt met de echte wereld.
+    Hierdoor werken de voorbeeldprogramma's in beide gevallen, maar deze oplossing is natuurlijk niet optimaal.
+</p>
+
+<p>
+    Hieronder volgt een lijst van enkele verbeteringen die nog kunnen worden toegevoegd:
+</p>
+
+<ul>
+    <li><em>Floating point getallen:</em> dit wordt nog niet ondersteund door de programmeertaal.</li>
+    <li><em>Error handling:</em> de parser van de programmeertaal en de wereld bevatten nog geen error handling.</li>
+    <li><em>Verbeterde collision detection:</em>momenteel worden de uitstekende wielen van de MBot genegeerd bij collision detection.</li>
+</ul>
 
 <h1>7. Broncode</h1>
 
