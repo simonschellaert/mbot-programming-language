@@ -328,17 +328,37 @@ _Flank_      := 👈 | 👉
 <h1>4. Voorbeeldprogramma's <span class="emoji">📚</span></h1>
 
 <h2>Politiewagen</h2>
-<pre><code class="language-markup line-numbers" data-include-file="/examples/police.txt"></code></pre>
+<pre><code class="language-markup line-numbers" data-include-file="/programs/police.txt"></code></pre>
+<p>
 Dit programmaatje bestaat uit één oneindige lus.
 In deze lus wordt eerst het linkerledje op rood (RGB-waarde 100 0 0) en het rechterledje op blauw (RGB-waarde 0 0 100) gezet.
-Vervolgens 
-
-<h2>Lijn volgen</h2>
-<pre><code class="language-markup line-numbers" data-include-file="/examples/linefollower.txt"></code></pre>
+Vervolgens wachten we 400 ms en doen we het omgekeerde, m.a.w. het linkerledje op blauw zetten en het rechterledje op rood.
+Tenslotte wachten we opnieuw 400 ms en wordt de lus opnieuw uitgevoerd.
+</p>
 
 <h2>Obstakels ontwijken</h2>
-<pre><code class="language-markup line-numbers" data-include-file="/examples/obstacles.txt"></code></pre>
-Het 
+<pre><code class="language-markup line-numbers" data-include-file="/programs/avoid.txt"></code></pre>
+<p>
+Het merendeel van de functionaliteit situeert zich wederom in een oneindige lus.
+In deze lus wordt de afstandsensor (📏) uitgelezen en vergeleken met de voorafbepaalde treshold <em>dist</em>.
+Indien de afstand tot een object groter is dan deze treshold, blijft de robot rechtdoor rijden.
+Indien niet, dan rijden we gedurende 800 ms achteruit en draaien we vervolgens gedurende 400 ms naar rechts vooraleer de lus opnieuw wordt uitgevoerd.
+</p>
+
+
+<h2>Lijn volgen</h2>
+<pre><code class="language-markup line-numbers" data-include-file="/programs/line.txt"></code></pre>
+<p>
+Net zoals bij de vorige twee programma's, wordt ook hier het merendeel van het werk uitgevoerd in de oneindige lus.
+Het programma wordt ietsje ingewikkelder doordat we merkten dat de mBot soms kortstondig de lijn kwijtraakt.
+Om te vermijden dat hij dan volledig de mist in gaat, houden we telkens de meest recente nuttige waarde van de lijnsensor bij in de variabele <em>prev</em>.
+Het eerste wat we doen in de lus is het uitlezen van de laatste waarde van de lijnsensor.
+Vervolgens controleren we als we iets met deze waarde kunnen aanvangen. Indien de waarde namelijk tweemaal wit is, hergebruiken we de laatste geldige waarde uit <em>prev</em>.
+Indien de waarde ofwel links ofwel rechts zwart is, slaan we deze waarde op.
+Vervolgens sturen we de motoren aan op basis van deze waarde.
+Concreet betekent rijden we naar links (resp. rechts) als we links (resp. rechts) zwart zien of rijden we rechtdoor indien we tweemaal zwart uitlezen.
+</p>
+
 
 <h1>5. Implementatie <span class="emoji">👨‍💻</span></h1>
 
