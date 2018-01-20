@@ -19,6 +19,7 @@ botDevice d = Device {
     readLine     = fmap lineToInt (MBot.readLineFollower d)
 }
 
+-- Converts the line sensor reading of the physical mBot to an integer.
 lineToInt :: MBot.Line -> Int
 lineToInt MBot.BOTHW  = 0
 lineToInt MBot.RIGHTB = 1
