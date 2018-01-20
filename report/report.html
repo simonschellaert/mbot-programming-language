@@ -7,39 +7,21 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.8.4/plugins/line-numbers/prism-line-numbers.css"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
     <script>
-        $(document).ready(function () {
-            $('.ebnf').html((i, old) = > old.replace(/\|/g, '｜')
-            )
-            .
-            html((_, old) = > old.replace(/bar/g, '|')
-            )
-            .
-            html(function (i, oldHtml) {
-                return oldHtml.replace(/_([a-zA-Z0-9]*)_/g, (a, name) = > "<span class='ebnf-class'>" + name + "</span>"
-                )
-                ;
-            }).html((_, old) = > old.replace(/\*(\S*)\*/g, (a, name) = > "<span class='ebnf-spacing'>" + name + "</span>"
-            ))
-            .
-            html((_, old) = > old.replace(/(?!~)(\[|\]|{|}|｜|\(|\))(?!~)/g, (_, name) = > "<span class='ebnf-syntax'>" + name + "</span>"
-            ))
-            .
-            html((_, old) = > old.replace(/~(\S*)~/g, (_, id) = > id
-            ))
-            ;
-
-            $('p').html((_, old) = > old.replace(/([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF]|⏪|⬆️|⬇️|⬅️|➡️)/g, (_, emoji) = > '<span class="emoji">' + emoji + '</span>'
-            ))
-            ;
-
-            // Include each of the files referenced with a `data-include-file` tag and then run syntax highlighting on the page
-            $("[data-include-file]").each((_, el) = > $(el).load($(el).attr('data-include-file'), null, () = > Prism.highlightAll()
-            ))
-            ;
-        });
-    </script>
-
+$(document).ready(function() {
+    $('.ebnf').html((i, old) => old.replace(/\|/g, '｜'))
+             .html((_, old) => old.replace(/bar/g, '|'))
+             .html(function (i, oldHtml) {
+        return oldHtml.replace(/_([a-zA-Z0-9]*)_/g, (a, name) => "<span class='ebnf-class'>" + name + "</span>");
+             }).html((_, old) => old.replace(/\*(\S*)\*/g, (a, name) => "<span class='ebnf-spacing'>" + name + "</span>"))
+               .html((_, old) => old.replace(/(?!~)(\[|\]|{|}|｜|\(|\))(?!~)/g, (_, name) => "<span class='ebnf-syntax'>" + name + "</span>"))
+               .html((_, old) => old.replace(/~(\S*)~/g, (_, id) => id));
+               $('p').html((_, old) => old.replace(/([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF]|⏪|⬆️|⬇️|⬅️|➡️)/g, (_, emoji) => '<span class="emoji">' + emoji + '</span>'));
+   // Include each of the files referenced with a `data-include-file` tag and then run syntax highlighting on the page
+   $("[data-include-file]").each((_, el) => $(el).load($(el).attr('data-include-file'), null, () => Prism.highlightAll()));
+});
+</script>
 
     <style>
         @page {
@@ -117,6 +99,9 @@
             font-size: 15px;
         }
 
+        .token.operator {
+            background: transparent;
+        }
     </style>
 </head>
 
@@ -125,30 +110,28 @@
 <h1>1. Introductie <span class="emoji">👋</span></h1>
 
 <p>
-    In het kader van het project voor functioneel programmeren, hebben we de taal 🤖 ontwikkeld.
+In het kader van het project voor het vak Functioneel Programmeren, ontwikkelden we de taal 🤖.
     Deze taal kan gebruikt worden om een fysieke mBot of een virtuele mBot in de simulator, die we eveneens
     ontwikkelden, aan te sturen.
     Geïnspireerd door de overweldigende populariteit van Emoji, besloten we in de syntax veelvuldig gebruik te maken van
     Emoji.
-    Een belangrijke drijfveer achter deze beslissing was het feit dat we programmaatjes er op die manier erg tof kunnen
-    laten uitzien.
-    Verder was het ook technisch een interessante uitdaging en leek het ons aangenaam om eens iets anders te schrijven
+    Dit leek ons niet alleen technisch een interessante uitdaging, het leek ons ook aangenaam om eens iets anders te schrijven
     dan de zoveelste <em>if..then..else</em>.
 </p>
 
 <p>
     Een belangrijk principe bij het ontwerp van onze taal was dat 🤖-programma's er steeds elegant en &lsquo;aaibaar&rsquo;
     moesten uitzien.
-    Rekening houdend met dit principe, besloten we om onze taal niet louter uit Emoji op te bouwen, maar enkel Emoji te
-    gebruiken waar dit een van de bovenstaande factoren verhoogde.
-    Zo kozen we bijvoorbeeld voor 📏 in plaats <em>getDistance()</em>, maar kozen we niet voor ➗ in de plaats van /
-    aangezien deze substitutie de leesbaarheid niet ten goede komt.
+    Hiermee rekening houdend, besloten we om onze taal niet louter uit Emoji op te bouwen, maar enkel Emoji te
+    gebruiken op plaatsen waar onze taal er leesbaarder door werd.
+    Zo kozen we bijvoorbeeld voor 📏 in plaats van een functie <em>getDistance()</em>, maar kozen we niet voor ➗ in de plaats van /
+    aangezien deze laatste substitutie de leesbaarheid niet ten goede komt.
     Nog steeds met dit principe in het achterhoofd, probeerden we ook de &lsquo;clutter&rsquo; in onze taal zoveel
     mogelijk te beperken.
-    Zo maken we net zoals Python gebruik van indentatie in plaats van paren haakjes om indentatie aan te duiden en
+    Zo maken we, net zoals bv. Python, gebruik van indentatie in plaats van paren haakjes om blokken aan te duiden en
     worden statements gescheiden door een nieuwe lijn in plaats van een puntkomma.
     Aan de andere kant namen we het dubbelpunt na de conditie van een if-statement dan weer niet over, aangezien dit
-    voornamelijk visuele ruis creërde.
+    onnodige visuele ruis introduceerde.
 </p>
 
 <p>
@@ -156,13 +139,13 @@
     Er bestaan reeds andere programmeertalen die experimenteren met Emoji.
     Zo gebruikt de taal 4Lang louter Emoji, maar ook Apple's Swift laat Emoji-karakters toe in namen van variabelen of
     klassen.
-    We besloten om ons zo weinig mogelijk te baseren op reeds bestaande implementaties omdat het ons leuker en
-    leerrijker leek om iets volledig vanaf nul te bouwen.
+    We besloten om ons zo weinig mogelijk te baseren op bestaande Emoji-talen omdat het ons leuker en
+    leerrijker leek om iets volledig vanaf nul te ontwerpen.
 </p>
 
 
 <p>
-    Los van het esthetische aspect, valt uiteraard wel te discussiëren over het praktisch nut van de taal. Zo bevatten
+    Los van het esthetische aspect, valt uiteraard te discussiëren over het praktisch nut van de taal. Zo bevatten
     de meeste toetsenborden geen Emoji-karakters.
     We zijn er dan ook geenszins van overtuigd dat een programmeertaal gebruik makend van Emoji effectief een goed idee
     is voor praktische toepassingen.
@@ -170,7 +153,7 @@
     leerervaring was.
 </p>
 
-<h1>2. Syntax van de taal <span class="emoji">✒️</span></h1>
+<h1 style="page-break-before: always">2. Syntax van de taal <span class="emoji">✒️</span></h1>
 
 <p>
     We maken gebruik van de <em>Extended Backus-Naur form</em> om de syntax van onze taal te beschrijven.
@@ -202,7 +185,7 @@ _BTerm_      := _BFactor_ { && _BFactor_ }
 _BFactor_    :=  👍  | 👎 | ! _BFactor_ | ~(~_BExp_~)~ |  _BRel_
 _BRel_       := _AExp_ < _AExp_ | _AExp_ == _AExp_ | _AExp_ > _AExp_
 
-_Command_    := 💨 _Direction_ | 😴 _Duration_ | 🚨 _Flank_ _AExp_ _AExp_ _AExp_ | 🎶 _Duration_ _AExp_
+_Command_    := 💨 _Direction_ | 😴 _Duration_ | 🚨 _Flank_ _AExp_ _AExp_ _AExp_
 _Direction_  := ⬇️ | ➡️ | ⬅️ | ⬆️
 _Duration_   := 🕑 | 🕔 | 🕖 | 🕙 | _AExp_
 _Flank_      := 👈 | 👉
@@ -212,7 +195,7 @@ _Flank_      := 👈 | 👉
     In bovenstaande definities duidt <em>Identifier</em> de naam van een variabele aan.
     Variabelenamen beginnen steeds met een letter gevolgd door nul of meerdere alfanumerieke karakters.
     Een <em>Literal</em> is een geheel getal in het decimale talstelsel.
-    <em>Some text</em> duidt vervolgens één regel tekst met eender welke karakters, ook witruimte, aan.
+    <em>Some text</em> duidt vervolgens één regel tekst met eender welke karakters, waaronder ook witruimte, aan.
 
 <h1>3. Semantiek van de taal <span class="emoji">📜</span></h1>
 
@@ -244,7 +227,7 @@ _Flank_      := 👈 | 👉
 
 <p>
     Dit is een conditional. De structuur is hetzelfde als bij een traditioneel if/else-if/else-statement.
-    Eerst wordt de booleaanse expressie naast ❓ geëvalueerd, als deze naar 👍 evalueert wordt de bijhorende body
+    Eerst wordt de booleaanse expressie naast ❓ geëvalueerd. Als deze naar 👍 evalueert, wordt de bijhorende body
     uitgevoerd.
     Indien de conditie naar 👎 evalueert, testen we de ⁉️-condities één voor één en voeren we de body uit die hoort bij
     de eerste die naar 👍 evalueerde. Indien geen enkele conditie naar 👍 evalueerde, wordt de body van ❗️-tak
@@ -276,9 +259,9 @@ _Flank_      := 👈 | 👉
 
 <p>
     Slaap even alvorens verder te gaan met de uitvoering.
-    Gedurende het slapen, blijft de MBot actief. Hij rijdt m.a.w. verder in de richting waarin hij aan het rijden was.
+    Gedurende het slapen, blijft de MBot actief. Hij rijdt m.a.w. verder in de richting waarin hij reeds aan het rijden was.
     Als argument kan een arithmetische expressie, die het aantal te slapen milliseconden voorstelt, meegegeven worden.
-    Een andere mogelijkheid is om gebruik te maken van één van de ingebouwde constanten om 100 ms(🕑), 250 ms (🕔), 500
+    Een andere mogelijkheid is om gebruik te maken van één van de ingebouwde constanten om 100 ms (🕑), 250 ms (🕔), 500
     ms (🕖) of 1 s (🕙) te slapen.
 </p>
 
@@ -289,15 +272,6 @@ _Flank_      := 👈 | 👉
     Het eerste argument duidt aan als het commando betrekking heeft op het linkse (👈) of rechtse (👉) lichtje.
     De volgende drie argumenten zijn aritmetische expressies die de RGB-waarde van het in te stellen kleur voorstellen.
     Het bereik van de RGB-waarden loopt van 0 t.e.m. 100 en waarden buiten dit interval worden geclipped.
-</p>
-
-<h4>Sound</h4>
-
-<p>
-    Speel de opgegeven toon af voor de opgegeven duur.
-    Het eerste argument stelt de duur voor die we de toon willen afspelen. Net zoals bij het sleep-commando, kunnen we
-    hier een arithmetische expressie of een ingebouwde constante meegeven.
-    Het tweede argument is vervolgens een arithmetische expressie die de frequentie voorstelt.
 </p>
 
 <p>
@@ -311,18 +285,18 @@ _Flank_      := 👈 | 👉
 <p>
     Een arithmetische expressie is een uitdrukking die als resultaat een geheel getal oplevert.
     Om de prioriteit van de bewerkingen eenduidig vast te leggen, gebruiken we een hiërarchie van taalelementen.
-    Een expressie bestaat uit één of meerdere termen gescheiden door een plus- of min-symbool
+    Een expressie bestaat uit één of meerdere termen gescheiden door een plus- of min-symbool.
     Deze twee operatoren zijn links-associatief en hebben de laagste prioriteit.
     Een term bestaat vervolgens uit één of meerdere factoren gescheiden door een maal- of deling-symbool, welke ook
-    beide links-associatief zijn.
+    beide links-associatief zijn maar een hogere prioriteit hebben.
     Een factor tenslotte is het meest elementaire deel en kan bestaat uit een expressie omringd door haakjes, een
-    constante een sensor of een identifier.<br/>
+    constante numerieke waarde, een sensor of een identifier.<br/>
 </p>
 
 <p>
     Een constante is ofwel de decimale representatie van een geheel getal of één van de ingebouwde constanten - 🌑, 🌓,
     🌗 en 🌕 - die respectievelijk 0, 1, 2 en 3 voorstellen.
-    (Denk aan de binaire voorstelling van deze getallen om in te zien waarom deze representatie steek houdt).
+    Denk aan de binaire voorstelling van deze getallen om in te zien waarom deze representatie steek houdt.
 </p>
 
 <p>
@@ -330,8 +304,8 @@ _Flank_      := 👈 | 👉
     De afstandssensor, 📏, stelt de afstand voor tot het object voor de mBot.
     De waarde van deze sensor is steeds een geheel getal.
     De lijnsensor, 🔭, geeft aan welke kleur de mBot onder zich ziet.
-    De waarde van deze sensor is steeds één van de getallen 🌑 (beide zwart), 🌓 (enkel links zwart), 🌗 (enkel rechts
-    zwart) en 🌕 (beide wit).
+    De waarde van deze sensor is steeds een waarde van 0 t.e.m. 3: 🌑 (beide zwart), 🌓 (enkel links zwart), 🌗 (enkel rechts
+    zwart) of 🌕 (beide wit).
 </p>
 
 <p>
@@ -347,15 +321,9 @@ _Flank_      := 👈 | 👉
     Om de prioriteit van de bewerkingen ook hier eenduidig vast te leggen, gebruiken we opnieuw een hiërarchie van
     taalelementen.
     Een expressie bestaat uit één of meerdere termen gescheiden door het OR-symbool (||).
-    Een term bestaat uit zijn beurt weer uit één of meerdere factoren gescheiden door het AND-symbool (&and;&and;).
-    Een factor tenslotte is waar (👍), onwaar (👎), het omgekeerde van factor, een expressie tussen haakjes of een
-    relatie.
-</p>
-
-<p>
-    Een relatie is een vergelijking tussen twee arithmetische expressies en levert een booleanse waarde op die de
-    uitkomst van de vergelijking voorstelt.
-    Hier zijn de relaties kleiner dan (<), gelijk aan (==) en groter dan (>) geïmplementeerd.
+    Een term bestaat uit zijn beurt weer uit één of meerdere factoren gescheiden door het AND-symbool (&amp;&amp;).
+    Een factor tenslotte is waar (👍), onwaar (👎), het omgekeerde van factor, een expressie tussen haakjes of het resultaat van een
+    vergelijking. De mogelijke vergelijkingen zijn kleiner dan (<), gelijk aan (==) en groter dan (>).
 </p>
 
 <h1>4. Voorbeeldprogramma's <span class="emoji">📚</span></h1>
