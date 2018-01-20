@@ -10,6 +10,7 @@ main = do d <- MBot.openMBot
           initialize mDevice
           MBot.closeMBot d
 
+-- A device that forwards commands to the physical mBot.
 botDevice d = Device {
     sleep        = threadDelay . (*1000),
     setRGB       = \l r g b -> MBot.sendCommand d $ MBot.setRGB l r g b,

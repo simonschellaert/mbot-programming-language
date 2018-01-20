@@ -8,16 +8,14 @@ import           System.Environment
 import           System.Exit
 import           System.IO
 
+-- Parses the arguments passed to the program and executes the script passed as the argument on the specified device.
 initialize :: Device -> IO ()
 initialize mDevice = do args <- getArgs
                         when (length args /= 1) (die "Expects the script to execute as only argument")
                         input <- catch (readFile . head $ args) (readHandler . head $ args)
-                        let inp' = preprocess input
-                        putStrLn inp'
-                        let out = parse statementSeq inp'
-                        unless (null out) (do let prog = fst (head out)
-                                              runStmt mDevice prog
-                                              return ())
+                        let prs = parse statementSeq . preprocess $ input
+                        unless (null prs) (do let prog = fst (head prs)
+                                              void $ runStmt mDevice prog)
 
 readHandler :: String -> IOError -> IO a
 readHandler name _ = die ("Cannot open file: " ++ name)
