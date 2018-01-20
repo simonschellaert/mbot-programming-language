@@ -103,6 +103,7 @@ $(document).ready(function() {
 
         p code {
             font-size: 0.75em;
+            font-family: 'Monaco';
         }
 
         .ref {
@@ -118,6 +119,9 @@ $(document).ready(function() {
 
 <body>
 
+<p style="text-align: center; font-family: Helvetica Neue; font-weight: bold; font-size: 1.5em; margin-bottom: 0.3em;">Project Functioneel Programmeren</p>
+<p style="text-align: center; font-family: Helvetica Neue; font-size:1.1em">Simon Schellaert<br/>Billie Devolder</p>
+
 <h1>1. Introductie</h1>
 
 <p>
@@ -126,28 +130,25 @@ In het kader van het project voor het vak Functioneel Programmeren, ontwikkelden
     ontwikkelden, aan te sturen.
     Geïnspireerd door de overweldigende populariteit van Emoji, besloten we in de syntax veelvuldig gebruik te maken van
     Emoji.
-    Dit leek ons niet alleen technisch een interessante uitdaging, het leek ons ook aangenaam om eens iets anders te schrijven
-    dan de zoveelste <em>if..then..else</em>.
+    Dit bood niet alleen technisch een interessante uitdaging, maar ook een aangename afwisseling voor de zoveelste <em>if..then..else</em>.
 </p>
 
 <p>
-    Een belangrijk principe bij het ontwerp van onze taal was dat 🤖-programma's er steeds elegant en &lsquo;aaibaar&rsquo;
+    Een belangrijk principe bij het ontwerp van onze taal was dat 🤖-programma's er elegant en &lsquo;aaibaar&rsquo;
     moesten uitzien.
     Hiermee rekening houdend, besloten we om onze taal niet louter uit Emoji op te bouwen, maar enkel Emoji te
-    gebruiken op plaatsen waar onze taal er leesbaarder door werd.
+    gebruiken op plaatsen waar onze taal er effectief leesbaarder door werd.
     Zo kozen we bijvoorbeeld voor 📏 in plaats van een functie <em>getDistance()</em>, maar kozen we niet voor ➗ in de plaats van /
     aangezien deze laatste substitutie de leesbaarheid niet ten goede komt.
-    Nog steeds met dit principe in het achterhoofd, probeerden we ook de &lsquo;clutter&rsquo; in onze taal zoveel
-    mogelijk te beperken.
+    Met dit principe in het achterhoofd, probeerden we de &lsquo;clutter&rsquo; in onze taal zoveel mogelijk te beperken.
     Zo maken we, net zoals bv. Python, gebruik van indentatie in plaats van paren haakjes om blokken aan te duiden en
     worden statements gescheiden door een nieuwe lijn in plaats van een puntkomma.
-    Aan de andere kant namen we het dubbelpunt na de conditie van een if-statement dan weer niet over, aangezien dit
+    Aan de andere kant namen we het dubbelpunt na de conditie van een if-statement dan weer niet over uit Python, aangezien dit
     onnodige visuele ruis introduceerde.
 </p>
 
 <p>
-    Uiteraard zijn we ons ervan bewust dat we niet de eerste zijn met dit idee.
-    Er bestaan reeds andere programmeertalen die experimenteren met Emoji.
+    Uiteraard zijn we ons ervan bewust dat we niet de eerste zijn met het idee om een taal te maken gebaseerd op Emoji.
     Zo gebruikt de taal 4Lang louter Emoji, maar ook Apple's Swift laat Emoji-karakters toe in namen van variabelen of
     klassen.
     We besloten om ons zo weinig mogelijk te baseren op bestaande Emoji-talen omdat het ons leuker en
@@ -160,11 +161,11 @@ In het kader van het project voor het vak Functioneel Programmeren, ontwikkelden
     de meeste toetsenborden geen Emoji-karakters.
     We zijn er dan ook geenszins van overtuigd dat een programmeertaal gebruik makend van Emoji effectief een goed idee
     is voor praktische toepassingen.
-    Waar wel van overtuigd zijn, is das het ontwikkelen en implementeren van deze taal een erg interessante en aangename
+    Waar wel van overtuigd zijn, is dat het ontwikkelen en implementeren van deze taal een erg interessante en aangename
     leerervaring was.
 </p>
 
-<h1 style="page-break-before: always">2. Syntax van de taal</h1>
+<h1>2. Syntax van de taal</h1>
 
 <p>
     We maken gebruik van de <em>Extended Backus-Naur form</em> om de syntax van onze taal te beschrijven.
@@ -182,7 +183,8 @@ _Stmt_       := _Assignment_ | _While_ | _If_ | _Command_ | _Skip_
 
 _Assignment_ := <em>Identifier</em> ⏪ _AExp_
 _While_      := 🔁 _BExp_ *⇥* _StmtSeq_ *⇤*
-_If_         := ❓ _BExp_ *⇥* _StmtSeq_ *⇤* { *⏎* ⁉️ _BExp_ *⇥* _StmtSeq_ *⇤* } [ *⏎* ❗️ *⇥* _StmtSeq_ *⇤* ]
+_If_         := ❓ _BExp_ *⇥* _StmtSeq_ *⇤* { *⏎* ⁉️ _BExp_ *⇥* _StmtSeq_ *⇤* }
+                [ *⏎* ❗️ *⇥* _StmtSeq_ *⇤* ]
 _Skip_       := 💭 <em>Some text</em>
 
 _AExp_       := _ATerm_ { ( + | - ) _ATerm_ }
@@ -206,12 +208,12 @@ _Flank_      := 👈 | 👉
     In bovenstaande definities duidt <em>Identifier</em> de naam van een variabele aan.
     Variabelenamen beginnen steeds met een letter gevolgd door nul of meerdere alfanumerieke karakters.
     Een <em>Literal</em> is een geheel getal in het decimale talstelsel.
-    <em>Some text</em> duidt vervolgens één regel tekst met eender welke karakters, waaronder ook witruimte, aan.
+    <em>Some text</em> duidt vervolgens één regel tekst met eender welke karakters, waaronder dus ook witruimte, aan.
 
 <h1>3. Semantiek van de taal</h1>
 
 <p>
-    Een programma in 🤖 is een <span class="ebnf-class">StmtSeq</span>, m.a.w. een opeenvolging van statements die elk
+    Een programma in 🤖 is een <span class="ebnf-class">StmtSeq</span>, m.a.w. een opeenvolging van één of meerdere statements die elk
     op een eigen lijn staan.
     We maken dus geen gebruik van puntkomma's om statements te scheiden, zoals dat vaak gebeurt, maar wel van één of
     meerdere newline-karakters.
@@ -224,7 +226,7 @@ _Flank_      := 👈 | 👉
 <h3>Assignment</h3>
 
 <p>
-    Dit is een toekenning. De waarde van de aritmetische expressie rechts van het toekenningsteken (⏪) wordt opgeslagen
+    Dit is een toekenning. De waarde van de arithmetische expressie rechts van het toekenningsteken (⏪) wordt opgeslagen
     onder de naam <em>Identifier</em>, die links die van het toekenningsteken staat.
 </p>
 
@@ -237,11 +239,11 @@ _Flank_      := 👈 | 👉
 <h3>If</h3>
 
 <p>
-    Dit is een conditional. De structuur is hetzelfde als bij een traditioneel if/else-if/else-statement.
+    Dit is een conditional. De structuur is dezelfde als bij een traditioneel if/else-if/else-statement.
     Eerst wordt de booleaanse expressie naast ❓ geëvalueerd. Als deze naar 👍 evalueert, wordt de bijhorende body
     uitgevoerd.
     Indien de conditie naar 👎 evalueert, testen we de ⁉️-condities één voor één en voeren we de body uit die hoort bij
-    de eerste die naar 👍 evalueerde. Indien geen enkele conditie naar 👍 evalueerde, wordt de body van ❗️-tak
+    de eerste conditie die naar 👍 evalueerde. Indien geen enkele conditie naar 👍 evalueerde, wordt de body van ❗️-tak
     uitgevoerd indien deze gegeven is.
     Er mogen dus een nul of meerdere ⁉️-takken zijn en hoogstens één ❗️-tak.
 </p>
@@ -249,14 +251,14 @@ _Flank_      := 👈 | 👉
 <h3>Skip</h3>
 
 <p>
-    Dit is commentaar. Alle tekst rechts van de 💭 wordt genegeerd.
+    Dit is commentaar. Alle tekst rechts van het 💭-symbool op dezelfde lijn wordt genegeerd.
 </p>
 
 <h3>Command</h3>
 
 <p>
     Dit stelt een commando voor dat naar de MBot of de simulator wordt gestuurd.
-    Er zijn vier types commando's. De argumenten van een commando worden van elkaar gescheiden door een spatie.
+    We onderscheiden vier types commando's. De argumenten van een commando worden van elkaar gescheiden door een spatie.
 </p>
 
 <h4>Drive</h4>
@@ -270,7 +272,7 @@ _Flank_      := 👈 | 👉
 
 <p>
     Slaap even alvorens verder te gaan met de uitvoering.
-    Gedurende het slapen, blijft de MBot actief. Hij rijdt m.a.w. verder in de richting waarin hij reeds aan het rijden was.
+    Gedurende het slapen blijft de MBot actief. Hij rijdt dus gewoon verder in de richting waarin hij reeds aan het rijden was.
     Als argument kan een arithmetische expressie, die het aantal te slapen milliseconden voorstelt, meegegeven worden.
     Een andere mogelijkheid is om gebruik te maken van één van de ingebouwde constanten om 400 ms (🕑), 800 ms (🕔), 1200 ms (🕧), 1600 ms (🕖) of 2 s (🕙) te slapen.
 </p>
@@ -280,7 +282,7 @@ _Flank_      := 👈 | 👉
 <p>
     Laat het opgegeven lichtje branden in de opgegeven kleur.
     Het eerste argument duidt aan als het commando betrekking heeft op het linkse (👈) of rechtse (👉) lichtje.
-    De volgende drie argumenten zijn aritmetische expressies die de RGB-waarde van het in te stellen kleur voorstellen.
+    De volgende drie argumenten zijn arithmetische expressies die de RGB-waarde van het in te stellen kleur voorstellen.
     Het bereik van de RGB-waarden loopt van 0 t.e.m. 100 en waarden buiten dit interval worden geclipped.
 </p>
 
@@ -419,7 +421,7 @@ We overlopen nu kort de belangrijkste punten van onze implementatie.
    Om het programma uit te voeren op de fysieke mBot, moet er eerst een geschikt device worden aangemaakt dat communiceert met de mBot <span class="ref">Interpreter.hs: 8</span>.
    Vervolgens kan het meegegeven programma ingelezen, geparsed en geevalueerd worden met het zonet gemaakte device.
    Merk op dat deze laatste stappen ook van toepassing zijn bij uitvoering op de simulator.
-   Om code-duplicatie te vermijden, hebben we deze functionaliteit dan ook ondergebracht in een functie <code>intialize</code> <span class="ref">Initialize.hs: 12</span>.
+   Om code-duplicatie te vermijden, hebben we deze functionaliteit dan ook ondergebracht in een functie <code>initialize</code> <span class="ref">Initialize.hs: 12</span>.
    Die functie kan vervolgens opgeroepen worden met een geschikt device om het inlezen, parsen en uitvoeren van het programma te starten.
 </p>
 
@@ -444,8 +446,8 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 <p style="text-align: center"><img src="points.png"/></p>
 
 <p>
-    De nood aan de 4 extra punten wordt geïllustreerd aan de hand van de volgende 2 scenario's. In het eerste scenario
-    wil de robot zich door een kleine ingang tussen 2 muren bewegen. Een muur en de robot zijn precies even groot dus
+    De nood aan de 4 extra punten wordt geïllustreerd aan de hand van de volgende twee scenario's. In het eerste scenario
+    wil de robot zich door een kleine ingang tussen twee muren bewegen. Een muur en de robot zijn precies even groot dus
     zullen de hoekpunten van de robot precies samenvallen met de rand van de muur. We zijn dus genoodzaakt om punten die
     precies op de rand vallen niet te zien als collisions.
 </p>
@@ -453,7 +455,7 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 <p style="text-align: center"><img src="scenario1.png"/></p>
 
 <p>
-    In het tweede scenario rijdt de robot tegen een muur die zich op dezelfde y-waarde bevindt als de robot. Indien we
+    In het tweede scenario rijdt de robot tegen een muur die zich op dezelfde y-coördinaat bevindt als de robot. Indien we
     enkel de hoekpunten zouden bekijken, zouden alle punten precies samenvallen met een rand van een muur. Doordat
     punten net op de rand van een muur mogen vallen, zou er dus geen collision zijn. De robot zou
     dus in staat zijn om door de muur te rijden. We zijn dus genoodzaakt om 4 extra punten te controleren.
@@ -466,7 +468,7 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
 <p>
     Hiervoor construeren we een denkbeeldig segment die loodrecht staat op het midden van de voorkant van de robot. We
     berekenen de intersecties van dat segment met de muren. Daarna berekenen we de afstand van elke
-    intersectie tot het midden van de voorkant van de robot. De kleinste afstand is de waarde van de ultrasone sensor.
+    intersectie tot het midden van de voorkant van de robot. De kleinste afstand is de waarde van de ultrasone sensor <span class="ref">SimulatorInterface.hs: 58</span>.
 </p>
 
 <h4>Line follow sensor</h4>
@@ -478,6 +480,7 @@ De communicatie tussen het programma en de simulator gebeurt met behulp van een 
     effectief op het segment bevindt. X bevindt zich op het segment gedefinieerd door punten A en B a.s.a |AX| +
     |XB| = |AB|. Indien X zich op het segment bevindt en de afstand tussen X en de coördinaat kleiner is dan een half
     vakje, dan bevindt de coördinaat zich op het segment.
+    Deze berekening gebeurt in de functie <code>getLineStatus</code> <span class="ref">SimulatorInterface.hs: 83</span>.
 </p>
 
 <h1>6. Conclusie</h1>
