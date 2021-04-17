@@ -16,6 +16,9 @@ import           WorldParser
 -- The size of one cell.
 cell = 32.0
 
+-- The thickness of a line.
+lineWidth = 8.0
+
 -- Renders the world.
 render :: G.Picture -- Picture of a wall
        -> World     -- The world that should be rendered
@@ -38,7 +41,7 @@ render wp (World robot walls lns) = G.pictures $
 linePicture :: Line -> G.Picture
 linePicture ((x0, y0), (x1, y1)) = G.rotate angle
                                    $ G.translate ((l - cell) / 2) 0
-                                   $ G.rectangleSolid l cell
+                                   $ G.rectangleSolid l lineWidth
   where dx = x1 - x0
         dy = y1 - y0
         d = sqrt (dx ** 2 + dy ** 2)
@@ -114,7 +117,7 @@ collides walls (Robot _ _ (x, y) angle _ _) = not $ null [corner | corner <- cor
 runSimulator :: MVar World -> IO ()
 runSimulator m = do world <- readMVar m
                     [wp] <- mapM loadBMP ["images/wall.bmp"]
-                    G.playIO (G.InWindow "MBot" (700,500) (0,0)) -- display
+                    G.playIO (G.InWindow "MBot" (300,200) (0,0)) -- display
                                G.white                           -- background
                                60                                -- fps
                                world                             -- initial world

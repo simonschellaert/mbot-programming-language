@@ -78,12 +78,12 @@ We continously read the line sensor (🔭) and steer to follow the line. If no l
 To run a 🤖-program `examples/line.txt` on a physical mBot connected to your computer:
 
 ```
-$ runhaskell Interpreter.hs examples/line.txt
+$ runhaskell src/nterpreter.hs examples/line.txt
 ```
 
 To run a 🤖-program `examples/line.txt` on the built-in simulator:
 ```
-$ runhaskell Simulator.hs examples/line.txt
+$ runhaskell src/Simulator.hs examples/line.txt
 ```
 <p align="center"><img alt="Emulator" src="docs/emulator.png" width="60%" /></p>
 

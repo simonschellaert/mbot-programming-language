@@ -1,5 +1,3 @@
-module Simulator where
-
 import           Control.Concurrent (threadDelay)
 import           Evaluator
 import           Initialize         (initialize)
