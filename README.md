@@ -5,7 +5,7 @@ __A simple Emoji-based programming language to control a physical or simulated [
 While 🤖 was not meant to be serious, it does work. This repository provides an interpreter for the language, written in Haskell. If you have a physical mBot, you can write programs and execute them on there. If not, we provide a simulator to mimick the mBot and its surroundings.
 
 
-## 📝 Example Programs
+## Example Programs
 
 ### Police Car
 
@@ -93,7 +93,7 @@ The full syntax is described below in [Extended Backus-Naur form](https://en.wik
 <p align="center"><img alt="Syntax" src="docs/syntax.png" width="60%" /></p>
 
 
-## 💬 Semantics
+## Semantics
 
 A 🤖-program is a `StmtSeq`, i.e. a sequence of one or more statements (`Stmt`) separated by newlines. Just like in Python, blocks are expressed by their indentation. There are five types of statements:
 
