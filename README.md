@@ -42,7 +42,9 @@ dist ⏪ 20
       😴  🕑
 ```
 
-Specifically, we continously read the distance sensor (📏) and compare it to the threshold `dist`. When the distance is greater than `dist`, we keep driving straight ahead. Otherwise, we back up for 800 ms and then turn right for 400 ms before we continue our way.
+We continuously read the distance sensor (📏) and compare it to the threshold `dist`.
+If the distance is greater than `dist`, we keep driving straight ahead.
+Otherwise, we back up for 800 ms and then turn right for 400 ms before we continue our way.
 
 
 ### Follow The Line
@@ -71,14 +73,17 @@ prev ⏪ 🌑
 
 ```
 
-We continously read the line sensor (🔭) and steer to follow the line. If no line is detected (🌕), we reuse the last detected value. If the line is detected on the left (🌓), we steer left and if the line is detected on the right (🌗), we steer right. If the line is directly underneath us (🌑), we drive straight on.
+We continuously read the line sensor (🔭) and steer to follow the line.
+If no line is detected (🌕), we reuse the last detected value.
+If the line is detected on the left (🌓), we steer left and if the line is detected on the right (🌗), we steer right.
+If the line is directly underneath us (🌑), we drive straight on.
 
 ##  Usage
 
 To run a 🤖-program `examples/line.txt` on a physical mBot connected to your computer:
 
 ```
-$ runhaskell src/nterpreter.hs examples/line.txt
+$ runhaskell src/Interpreter.hs examples/line.txt
 ```
 
 To run a 🤖-program `examples/line.txt` on the built-in simulator:
@@ -95,38 +100,50 @@ The full syntax is described below in [Extended Backus-Naur form](https://en.wik
 
 ## Semantics
 
-A 🤖-program is a `StmtSeq`, i.e. a sequence of one or more statements (`Stmt`) separated by newlines. Just like in Python, blocks are expressed by their indentation. There are five types of statements:
+A 🤖-program is a `StmtSeq`, i.e. a sequence of one or more statements (`Stmt`) separated by newlines.
+Just like in Python, blocks are expressed by their indentation (the [off-side rule](https://en.wikipedia.org/wiki/Off-side_rule)).
+There are five types of statements:
 
-### Assignment
+### Assignment (⏪)
 The value of the arithmetic expression (`AExp`) on the right of the assignment operator (⏪) is assigned to the  _Identifier_ specified on the left hand side.
 
-### While
+### While (🔁)
 This is a traditional while-loop. The body keeps being executed as long as the specified boolean expression (`BExp`) evaluates to 👍.
 
-### If
+### If (❓)
 This is a traditional if/else-if/else-statement. We first evaluate the boolean expression next to❓.
 
 If this evaluates to 👍, we execute the corresponding body. If this evaluates to 👎, we evaluate the ⁉️-conditions one-by-one and execute the body corresponding the the first condition evaluating to 👍. If none of the boolean expressions evaluate to 👍, the body of the❗️-branch is executed, if one is specified.
 
-### Skip
-This a comment. Any text to the right of the 💭 is ignored.
+### Skip (💭)
+This is a comment.
+Any text to the right of the 💭 is ignored.
 
 ### Command
-This is a command for the mBot (or emulator) to execute. There are three types of command
+This is a command for the mBot (or the simulator) to execute. There are three types of command
 
 #### Drive (💨)
-Start driving in the specified direction: forwards (⬆️), backwards, (⬇️), left (⬅️) or right (➡️).
+Start driving in the specified direction: forward (⬆️), backward, (⬇️), left (⬅️) or right (➡️).
 
 #### Sleep (😴)
-Sleep for the specified duration. You can pass in an arithmetic expression denothing the number of milliseconds to sleep, or use one of the built-in constants: 400 ms (🕑), 800 ms (🕔), 1200 ms (🕧), 1600 ms (🕖) of 2 s (🕙).
+Sleep for the specified duration. You can pass in an arithmetic expression denoting the number of milliseconds to sleep, or use one of the built-in constants: 400 ms (🕑), 800 ms (🕔), 1200 ms (🕧), 1600 ms (🕖) of 2 s (🕙).
 
-#### Light
+#### Light (🚨)
 Sets the color of the specified LED to a specific color. The first argument denotes whether to set the left (👈) or right (👉) LED. The next three arguments are arithmetic expressions denoting the RGB value on a scale of 0 to 100.
 
+<br><br>
+In the description of statements above, we touched a few times on arithmetic and boolean expressions.
+Their semantics are explained below.
+
 ### Arithmetic expressions
-An arithmetic expression is an expression that evaluates to a whole number. You can use all the traditional operators (`+`, `-`, `*` and `/`) to construct new arithmetic expressions. Any decimal literal is a valid arithmetic expression. Alternatively, you can use one of the built-in constants: 🌑, 🌓, 🌗 and 🌕  to denote 0, 1, 2 and 3 respectively. (Think about the binary representation of those numbers to see why this makes sense).
+An arithmetic expression is an expression that evaluates to a whole number.
+Any decimal literal is a valid arithmetic expression.
+You can use all the traditional operators (`+`, `-`, `*` and `/`) to construct new arithmetic expressions.
+Furthermore, you can use one of the built-in constants: 🌑, 🌓, 🌗 and 🌕  to denote 0, 1, 2 and 3 respectively. (Think about the binary representation of those numbers to see why this makes sense).
 
 Another arithmetic expression is querying one of the built-in sensors. The distance sensor (📏) returns the distance to the object in front of the mBot. The line sensor ( 🔭) returns the position of the line under the mBot. The value of this sensor is always between 0 and 3:  🌑 (line on both sides), 🌓 (line on the left), 🌗 (line on the right) or 🌕 (no line detected).
 
 ### Boolean expressions
-A boolean expression is an expression that either evaluates to true (👍) or false (👎). We support OR (||) and AND (&&) to combine boolean expressions. The comparison operators (`>`, `==` and `<`) also return a boolean value. 
+A boolean expression is an expression that either evaluates to either true (👍) or false (👎).
+We support OR (`||`) and AND (`&&`) to combine boolean expressions.
+The comparison of two arithmetic expressions (`>`, `==` and `<`) is also a valid boolean expression.
